@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from "framer-motion";
-import { Edit, Search, Trash2, Plus } from "lucide-react";
+import { Edit, Search, Trash2, UserRoundPlus } from "lucide-react";
 import axios from "axios";
 import AddResidentForm from './AddResidentForm';
 import EditResidentForm from './EditResidentForm';
@@ -69,10 +69,15 @@ const ResidentsTable = () => {
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
         setSearchTerm(term);
-        const filtered = residents.filter(
-            (resident) => resident.fullname.toLowerCase().includes(term) || resident.purok.toLowerCase().includes(term)
+        const filtered = residents.filter((resident) =>
+            Object.entries(resident).some(([key, value]) => {
+                if (key === "gender") {
+                    return value.toLowerCase() === term; // Exact match for gender
+                }
+                return value.toString().toLowerCase().includes(term);
+            })
         );
-
+    
         setFilteredResidents(filtered);
     };
 
@@ -203,7 +208,7 @@ const ResidentsTable = () => {
                                 });
                             }}
                         >
-                            <Plus size={18} />
+                            <UserRoundPlus size={18} />
                         </button>
                   </div>
             </div>

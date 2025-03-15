@@ -1,3 +1,4 @@
+// filepath: c:\Refugio\Refugio_Barangay_Profiling_System\frontend\src\App.jsx
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 import Sidebar from "./components/common/Sidebar";
 import OverviewPage from "./pages/OverviewPage";
@@ -9,6 +10,8 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
     const location = useLocation();
@@ -26,7 +29,7 @@ function App() {
             </div>
 
             {!isAuthPage && <Sidebar userId={userId} />}
-            <div className={isAuthPage ? 'flex flex-col items-center justify-center w-full bg-white p-6 rounded-lg shadow-md' : 'flex-grow overflow-auto'}>
+            <div className ='flex-grow overflow-auto'>
                 <Routes>
                     <Route path='/login' element={<LoginPage />} />
                     <Route path='/signup' element={<SignupPage />} />
@@ -40,6 +43,7 @@ function App() {
                     <Route path='/settings' element={<SettingsPage />} />
                 </Routes>
             </div>
+            <ToastContainer />
         </div>
     );
 }

@@ -35,25 +35,36 @@ const OverviewPage = () => {
                     <p className='text-lg'>Bunawan is a barangay in the city of Iligan. Its population as determined by the 2020 Census was 2,025. This represented 0.56% of the total population of Iligan.</p>
                 </div>
 
-                {/* SUMMARY DATA */}
-                <motion.div
-                    className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 columns-3'
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                >
-                     <h2 className='text-lg font-medium mb-4 text-gray-100'>Summary Data</h2>
-                    <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-                        <p className='text-gray-100 flex items-center py-1'><MapPinned className='mr-2 text-blue-500' /> Type: Barangay</p>
-                        <p className='text-gray-100 flex items-center py-1'><Earth className='mr-2 text-green-500' /> Island group: Mindanao</p>
-                        <p className='text-gray-100 flex items-center py-1'><Compass className='mr-2 text-yellow-500' /> Region: Northern Mindanao (Region X)</p>
-                        <p className='text-gray-100 flex items-center py-1'><Pin className='mr-2 text-red-500' /> City: Iligan</p>
-                        <p className='text-gray-100 flex items-center py-1'><Mailbox className='mr-2 text-purple-500' /> Postal code: 9200</p>
-                        <p className='text-gray-100 flex items-center py-1'><Users className='mr-2 text-pink-500' /> Population (2020): 2,025</p>
-                        <p className='text-gray-100 flex items-center py-1'><LocateFixed className='mr-2 text-orange-500' /> Coordinates: 8.3023, 124.3028 (8° 18' North, 124° 18' East)</p>
-                        <p className='text-gray-100 flex items-center py-1'><TrendingUp className='mr-2 text-indigo-500' /> Estimated elevation above sea level: 342.6 meters (1,124.0 feet)</p>
-                    </div>
-				</motion.div>
+                {/* SUMMARY DATA AND IMAGE */}
+                <div className='flex mb-5'>
+                    <motion.div
+                        className='w-1/3 bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 ps-8 ml-4'
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <h2 className='text-lg font-medium mb-4 text-gray-100 tracking-wider text-center'>Summary Data</h2>
+                        <div className='grid grid-cols-1 gap-4'>
+                            <p className='text-gray-100 flex items-center py-1'><MapPinned className='mr-2 text-blue-500' /> Type: Barangay</p>
+                            <p className='text-gray-100 flex items-center py-1'><Earth className='mr-2 text-green-500' /> Island group: Mindanao</p>
+                            <p className='text-gray-100 flex items-center py-1'><Compass className='mr-2 text-yellow-500' /> Region: Northern Mindanao (Region X)</p>
+                            <p className='text-gray-100 flex items-center py-1'><Pin className='mr-2 text-red-500' /> City: Iligan</p>
+                            <p className='text-gray-100 flex items-center py-1'><Mailbox className='mr-2 text-purple-500' /> Postal code: 9200</p>
+                            <p className='text-gray-100 flex items-center py-1'><Users className='mr-2 text-pink-500' /> Population (2020): 2,025</p>
+                            <p className='text-gray-100 flex items-center py-1'><LocateFixed className='mr-2 text-orange-500' /> Coordinates: 8.3023, 124.3028 (8° 18' North, 124° 18' East)</p>
+                            <p className='text-gray-100 flex items-center py-1'><TrendingUp className='mr-2 text-indigo-500' /> Estimated elevation above sea level: 342.6 meters (1,124.0 feet)</p>
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        className='w-2/3 ml-4'
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <img src='/maps.png' alt='Description of image' className='rounded-xl shadow-lg' />
+                    </motion.div>
+                </div>
 
                 {/* CHARTS */}
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>

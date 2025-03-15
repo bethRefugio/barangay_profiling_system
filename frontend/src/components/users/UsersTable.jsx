@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Edit, Trash2, Plus } from "lucide-react";
+import { Search, Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,6 +16,7 @@ const UsersTable = () => {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
     const [newUser, setNewUser] = useState({
         name: "",
         email: "",
@@ -49,6 +50,12 @@ const UsersTable = () => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewUser({ ...newUser, [name]: value });
+    };
+
+
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
     };
 
     const handleAddUser = async (e) => {
@@ -89,10 +96,16 @@ const UsersTable = () => {
         }
     };
 
-    const handleEditClick = (user) => {
+    const handleEditClick = async (user) => {
         setSelectedUserId(user.id);
-        setNewUser(user);
-        setShowEditForm(true);
+        try {
+            const response = await axios.get(`${API_URL}/${user.id}`);
+            setNewUser(response.data);
+            setShowEditForm(true);
+        } catch (error) {
+            console.error("Error fetching user details:", error);
+            toast.error('Error fetching user details!');
+        }
     };
 
     const handleDeleteClick = (user) => {
@@ -152,100 +165,135 @@ const UsersTable = () => {
 
             {showAddForm && (
                 <form className='mb-6' onSubmit={handleAddUser}>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <input
+                        type='text'
+                        name='name'
+                        placeholder='Name'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={newUser.name}
+                        onChange={handleInputChange}
+                        required
+                    />
+                    <input
+                        type='email'
+                        name='email'
+                        placeholder='Email'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={newUser.email}
+                        onChange={handleInputChange}
+                        required
+                    />
+                    <div className='relative'>
                         <input
-                            type='text'
-                            name='name'
-                            placeholder='Name'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={newUser.name}
+                            type={showPassword ? 'text' : 'password'}
+                            name='password'
+                            placeholder='Password'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
+                            value={newUser.password}
                             onChange={handleInputChange}
                             required
                         />
-                        <input
-                            type='email'
-                            name='email'
-                            placeholder='Email'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={newUser.email}
-                            onChange={handleInputChange}
-                            required
-                        />
-                        <input
-                            type='text'
-                            name='accountType'
-                            placeholder='Account Type'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={newUser.accountType}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </div>
-                    <div className='flex justify-end mt-4'>
-                        <button
-                            type='button'
-                            className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2'
-                            onClick={() => setShowAddForm(false)}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type='submit'
-                            className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
-                        >
-                            Add User
+                        <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-2.5 text-gray-500">
+                            {showPassword ? <EyeOff /> : <Eye />}
                         </button>
                     </div>
-                </form>
-            )}
-
+                    <select
+                        name='accountType'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={newUser.accountType}
+                        onChange={handleInputChange}
+                        required
+                    >
+                        <option value="" disabled>Select Role</option>
+                        <option value="Resident">Resident</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Barangay Captain">Barangay Captain</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div className='flex justify-end mt-4'>
+                    <button
+                        type='button'
+                        className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2'
+                        onClick={() => setShowAddForm(false)}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type='submit'
+                        className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
+                    >
+                        Add User
+                    </button>
+                </div>
+            </form>
+            )}   
             {showEditForm && (
                 <form className='mb-6' onSubmit={handleEditUser}>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <input
+                        type='text'
+                        name='name'
+                        placeholder='Name'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={newUser.name}
+                        onChange={handleInputChange}
+                        required
+                    />
+                    <input
+                        type='email'
+                        name='email'
+                        placeholder='Email'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={newUser.email}
+                        onChange={handleInputChange}
+                        required
+                    />
+                    <div className='relative'>
                         <input
-                            type='text'
-                            name='name'
-                            placeholder='Name'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={newUser.name}
+                            type={showPassword ? 'text' : 'password'}
+                            name='password'
+                            placeholder='Password'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
+                            value={newUser.password}
                             onChange={handleInputChange}
                             required
                         />
-                        <input
-                            type='email'
-                            name='email'
-                            placeholder='Email'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={newUser.email}
-                            onChange={handleInputChange}
-                            required
-                        />
-                        <input
-                            type='text'
-                            name='accountType'
-                            placeholder='Account Type'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={newUser.accountType}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </div>
-                    <div className='flex justify-end mt-4'>
-                        <button
-                            type='button'
-                            className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2'
-                            onClick={() => setShowEditForm(false)}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type='submit'
-                            className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
-                        >
-                            Update User
+                        <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-2.5 text-gray-500">
+                            {showPassword ? <EyeOff /> : <Eye />}
                         </button>
                     </div>
-                </form>
+                    <select
+                        name='accountType'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={newUser.accountType}
+                        onChange={handleInputChange}
+                        required
+                    >
+                        <option value="" disabled>Select Role</option>
+                        <option value="Resident">Resident</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Barangay Captain">Barangay Captain</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div className='flex justify-end mt-4'>
+                    <button
+                        type='button'
+                        className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2'
+                        onClick={() => setShowEditForm(false)}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type='submit'
+                        className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
+                    >
+                        Update User
+                    </button>
+                </div>
+            </form>
             )}
 
             {showDeleteConfirmation && (

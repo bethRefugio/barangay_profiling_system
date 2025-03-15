@@ -190,6 +190,18 @@ app.get('/user/:userId', async (req, res) => {
   res.json(user);
 });
 
+app.get('/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  const user = await client.hGetAll(`user:${userId}`);
+  if (Object.keys(user).length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+  }
+  // Decrypt the password before sending it to the frontend
+  const decryptedPassword = await bcrypt.compare(user.password, user.password);
+  user.password = decryptedPassword ? user.password : '';
+  res.json(user);
+});
+
 // Add this route to fetch all users
 app.get('/user', async (req, res) => {
   try {
@@ -207,31 +219,32 @@ app.get('/user', async (req, res) => {
 // Update (U)
 app.put('/user/:userId', async (req, res) => {
   const userId = req.params.userId;
-  const { name, email, password, profilePhoto } = req.body;
-  
-  if (!name && !email && !password && !profilePhoto) {
-    return res.status(400).json({ message: 'At least one field is required to update' });
+  const { name, email, password, accountType, status } = req.body;
+
+  if (!name && !email && !password && !accountType && !status) {
+      return res.status(400).json({ message: 'At least one field is required to update' });
   }
 
   try {
-    const existingUser = await client.hGetAll(`user:${userId}`);
-    if (Object.keys(existingUser).length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+      const existingUser = await client.hGetAll(`user:${userId}`);
+      if (Object.keys(existingUser).length === 0) {
+          return res.status(404).json({ message: 'User not found' });
+      }
 
-    // Update user data in Redis
-    if (name) await client.hSet(`user:${userId}`, 'name', name);
-    if (email) await client.hSet(`user:${userId}`, 'email', email);
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 5);
-      await client.hSet(`user:${userId}`, 'password', hashedPassword);
-    }
-    if (profilePhoto) await client.hSet(`user:${userId}`, 'profilePhoto', profilePhoto);
+      // Update user data in Redis
+      if (name) await client.hSet(`user:${userId}`, 'name', name);
+      if (email) await client.hSet(`user:${userId}`, 'email', email);
+      if (password) {
+          const hashedPassword = await bcrypt.hash(password, 5);
+          await client.hSet(`user:${userId}`, 'password', hashedPassword);
+      }
+      if (accountType) await client.hSet(`user:${userId}`, 'accountType', accountType);
+      if (status) await client.hSet(`user:${userId}`, 'status', status);
 
-    res.status(200).json({ message: 'User updated successfully' });
+      res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({ message: 'Failed to update user' });
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Failed to update user' });
   }
 });
 

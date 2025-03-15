@@ -1,4 +1,4 @@
-import { BarChart2, DollarSign, Menu, Settings, ShoppingBag, ShoppingCart, TrendingUp, Users } from "lucide-react";
+import { BarChart2, DollarSign, Menu, Settings, ShoppingBag, ShoppingCart, TrendingUp, Users, ContactRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -11,7 +11,7 @@ const SIDEBAR_ITEMS = [
         color: "#6366f1",
         href: "/",
     },
-    { name: "Residents", icon: ShoppingBag, color: "#8B5CF6", href: "/residents" },
+    { name: "Residents", icon: ContactRound, color: "#8B5CF6", href: "/residents" },
     { name: "Users", icon: Users, color: "#EC4899", href: "/users", roles: ["admin", "barangay captain"] },
     { name: "Population", icon: DollarSign, color: "#10B981", href: "/sales" },
     { name: "Orders", icon: ShoppingCart, color: "#F59E0B", href: "/orders" },
