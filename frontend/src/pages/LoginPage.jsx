@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate, Route } from 'react-router-dom';
-
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import OverviewPage from "./OverviewPage";
-
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -18,11 +15,15 @@ const LoginPage = () => {
         try {
             const response = await axios.post('http://localhost:5000/login', { email, password }, { withCredentials: true });
             console.log("Response from server:", response.data); // Log the response
-            sessionStorage.setItem("user", JSON.stringify(response.data));
-            console.log("Login successful", response.data);
-            navigate('/overview');
-
-
+            if (response.status === 200) {
+                const { userId } = response.data;
+                sessionStorage.setItem('userId', userId);
+                console.log("Login successful", response.data);
+                navigate('/overview');
+            } else {
+                console.error('Login failed:', response.data.message);
+                setError('Invalid email or password');
+            }
         } catch (err) {
             console.error("Login error:", err); // Log the error
             setError('Invalid email or password');

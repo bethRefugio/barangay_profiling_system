@@ -4,6 +4,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -31,8 +34,54 @@ const client = redis.createClient({
 });
 
 client.connect()
-  .then(() => console.log('Connected to Redis'))
-  .catch(err => console.error('Redis connection error:', err));
+  .then(() => console.log('✅ Connected to Redis'))
+  .catch(err => console.error('❌ Redis connection error:', err));
+
+// Middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`📌 Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
+// Ensure the uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+      cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ storage });
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Route to upload profile photo
+app.post('/upload-profile-photo', upload.single('profilePhoto'), async (req, res) => {
+  try {
+      const userId = req.session.user?.userId;
+      if (!userId) {
+          return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const profilePhotoPath = req.file.path;
+
+      // Update user profile photo path in Redis
+      await client.hSet(`user:${userId}`, 'profilePhoto', profilePhotoPath);
+
+      res.status(200).json({ message: 'Profile photo uploaded successfully', profilePhoto: profilePhotoPath });
+  } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      res.status(500).json({ message: 'Failed to upload profile photo' });
+  }
+});
 
 // CRUD Operations
 // Route to save user data
@@ -45,22 +94,30 @@ app.post('/user', async (req, res) => {
   }
 
   try {
-    //Hashing password
+    // Hashing password
     const saltRounds = 5;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Increment the userId counter
     const userId = await client.incr('userIdCounter');
 
-    // Set student data in Redis (using object syntax for Redis v4 and above)
-    const userData = { name, email, hashedPassword, accountType };
+    // Set user data in Redis (using object syntax for Redis v4 and above)
+    const userData = { 
+      name, 
+      email, 
+      hashedPassword, 
+      accountType, 
+      status: 'Active', 
+      profilePhoto: 'uploads/default-profile.png' // Default profile photo
+    };
 
-    // Save student data in Redis hash
+    // Save user data in Redis hash
     await client.hSet(`user:${userId}`, 'name', userData.name);
     await client.hSet(`user:${userId}`, 'email', userData.email);
     await client.hSet(`user:${userId}`, 'password', userData.hashedPassword);
     await client.hSet(`user:${userId}`, 'accountType', userData.accountType);
-    
+    await client.hSet(`user:${userId}`, 'status', userData.status);
+    await client.hSet(`user:${userId}`, 'profilePhoto', userData.profilePhoto);
 
     // Respond with success message
     res.status(201).json({ message: 'User saved successfully', userId });
@@ -70,58 +127,67 @@ app.post('/user', async (req, res) => {
   }
 });
 
-//Login Route
+// Login Route
 app.post('/login', async (req, res) => {
-    const { email, password } = req.body; // Move this line up
-    console.log("Login attempt with email:", email); // Log the email being used for login
+  const { email, password } = req.body;
+  console.log("Login attempt with email:", email);
 
-    // Validate input
-    if (!email || !password) {
-        console.error("Email or password not provided"); // Log error if email or password is missing
-        return res.status(400).json({ message: 'Email and password are required' });
+  // Validate input
+  if (!email || !password) {
+    console.error("Email or password not provided");
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+
+  try {
+    // Search for user in Redis (loop through stored users)
+    const keys = await client.keys('user:*');
+    console.log("User keys found in Redis:", keys);
+
+    let userId = null;
+
+    for (const key of keys) {
+      const storedEmail = await client.hGet(key, 'email');
+      if (storedEmail === email) {
+        userId = key.split(':')[1];
+        break;
+      }
     }
 
-    try {
-        // Search for user in Redis (loop through stored users)
-        const keys = await client.keys('user:*');
-        console.log("User keys found in Redis:", keys); // Log the keys found in Redis
-
-        let userId = null;
-        
-        for (const key of keys) {
-            const storedEmail = await client.hGet(key, 'email');
-            if (storedEmail === email) {
-                userId = key.split(':')[1]; // Extract userId from "user:userId"
-                break;
-            }
-        }
-
-        if (!userId) {
-            console.error("User not found for email:", email); // Log error if user is not found
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // Retrieve user details from Redis
-        const storedPassword = await client.hGet(`user:${userId}`, 'password');
-        console.log("Stored password retrieved for userId:", userId); // Log the userId for which password is retrieved
-
-        const accountType = await client.hGet(`user:${userId}`, 'accountType');
-
-        // Verify password
-        const isMatch = await bcrypt.compare(password, storedPassword);
-        if (!isMatch) {
-            console.error("Invalid password for userId:", userId); // Log error if password does not match
-            return res.status(401).json({ message: 'Invalid password' });
-        }
-
-        // Store user session
-        req.session.user = { userId, email, accountType };
-
-        res.status(200).json({ message: 'Login successful', accountType });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+    if (!userId) {
+      console.error("User not found for email:", email);
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    // Retrieve user details from Redis
+    const storedPassword = await client.hGet(`user:${userId}`, 'password');
+    console.log("Stored password retrieved for userId:", userId);
+
+    const accountType = await client.hGet(`user:${userId}`, 'accountType');
+
+    // Verify password
+    const isMatch = await bcrypt.compare(password, storedPassword);
+    if (!isMatch) {
+      console.error("Invalid password for userId:", userId);
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+
+    // Store user session
+    req.session.user = { userId, email, accountType };
+    res.status(200).json({ message: 'Login successful', userId, accountType });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Fetch specific user
+app.get('/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  const user = await client.hGetAll(`user:${userId}`);
+  if (Object.keys(user).length === 0) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  res.json(user);
 });
 
 // Add this route to fetch all users
@@ -141,9 +207,9 @@ app.get('/user', async (req, res) => {
 // Update (U)
 app.put('/user/:userId', async (req, res) => {
   const userId = req.params.userId;
-  const { name, email, accountType } = req.body;
+  const { name, email, password, profilePhoto } = req.body;
   
-  if (!name && !email && !accountType) {
+  if (!name && !email && !password && !profilePhoto) {
     return res.status(400).json({ message: 'At least one field is required to update' });
   }
 
@@ -156,8 +222,11 @@ app.put('/user/:userId', async (req, res) => {
     // Update user data in Redis
     if (name) await client.hSet(`user:${userId}`, 'name', name);
     if (email) await client.hSet(`user:${userId}`, 'email', email);
-    if (accountType) await client.hSet(`user:${userId}`, 'accountType', accountType);
-    
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 5);
+      await client.hSet(`user:${userId}`, 'password', hashedPassword);
+    }
+    if (profilePhoto) await client.hSet(`user:${userId}`, 'profilePhoto', profilePhoto);
 
     res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
@@ -167,10 +236,10 @@ app.put('/user/:userId', async (req, res) => {
 });
 
 // Delete (D) user
-app.delete('user/:userId', async (req, res) => {
+app.delete('/user/:userId', async (req, res) => {
   const userId = req.params.userId;
-  await client.del(`user:${userId}`);
-  res.status(200).json({ message: 'User deleted successfully' });
+  await client.hSet(`user:${userId}`, 'status', 'Inactive');
+  res.status(200).json({ message: 'User status set to Inactive' });
 });
 
 // Route to save resident data
@@ -270,10 +339,16 @@ app.put('/resident/:residentId', async (req, res) => {
 });
 
 // Delete (D)
-app.delete('resident/:residentId', async (req, res) => {
+app.delete('/resident/:residentId', async (req, res) => {
   const residentId = req.params.residentId;
   await client.del(`resident:${residentId}`);
   res.status(200).json({ message: 'resident deleted successfully' });
+});
+
+app._router.stack.forEach((middleware) => {
+  if (middleware.route) { // If middleware has a route
+      console.log(`✅ Registered Route: ${middleware.route.path}`);
+  }
 });
 
 // Start server

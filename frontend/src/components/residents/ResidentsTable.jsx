@@ -34,6 +34,7 @@ const ResidentsTable = () => {
         income_source: "",
         educational_level: ""
     });
+    const [accountType, setAccountType] = useState(null);
 
     const fetchResidents = useCallback(async () => {
         try {
@@ -46,6 +47,22 @@ const ResidentsTable = () => {
     }, []);
 
     useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const userId = sessionStorage.getItem('userId'); // Get userId from sessionStorage
+                if (!userId) {
+                    throw new Error('User ID not found in session storage');
+                }
+                console.log(`Fetching user data for userId: ${userId}`);
+                const response = await axios.get(`http://localhost:5000/user/${userId}`, { withCredentials: true });
+                setAccountType(response.data.accountType.toLowerCase());
+                console.log(`Fetched accountType: ${response.data.accountType}`);
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+            }
+        };
+
+        fetchUserData();
         fetchResidents();
     }, [fetchResidents]);
 
@@ -163,31 +180,32 @@ const ResidentsTable = () => {
                         value={searchTerm}
                     />
                     <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
-                    <button
-                        className='ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        onClick={() => {
-                            setShowAddForm(true);
-                            setShowEditForm(false);
-                            setNewResident({
-                                fullname: "",
-                                age: "",
-                                purok: "",
-                                gender: "",
-                                birthdate: "",
-                                email: "",
-                                phone: "",
-                                civil_status: "",
-                                is_pwd: "",
-                                is_senior: "",
-                                employment_status: "",
-                                income_source: "",
-                                educational_level: ""
-                            });
-                        }}
-                    >
-                        <Plus size={18} />
-                    </button>
-                </div>
+                   
+                        <button
+                            className='ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            onClick={() => {
+                                setShowAddForm(true);
+                                setShowEditForm(false);
+                                setNewResident({
+                                    fullname: "",
+                                    age: "",
+                                    purok: "",
+                                    gender: "",
+                                    birthdate: "",
+                                    email: "",
+                                    phone: "",
+                                    civil_status: "",
+                                    is_pwd: "",
+                                    is_senior: "",
+                                    employment_status: "",
+                                    income_source: "",
+                                    educational_level: ""
+                                });
+                            }}
+                        >
+                            <Plus size={18} />
+                        </button>
+                  </div>
             </div>
 
             {showAddForm && (
@@ -258,9 +276,11 @@ const ResidentsTable = () => {
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Educational Level
                             </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Actions
-                            </th>
+                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (
+                                <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                    Actions
+                                </th>
+                            )}
                         </tr>
                     </thead>
 
@@ -311,20 +331,24 @@ const ResidentsTable = () => {
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     {resident.educational_level}
                                 </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    <button
-                                        className='text-indigo-400 hover:text-indigo-300 mr-2'
-                                        onClick={() => handleEditClick(resident)}
-                                    >
-                                        <Edit size={18} />
-                                    </button>
-                                    <button
-                                        className='text-red-400 hover:text-red-300'
-                                        onClick={() => handleDeleteClick(resident)}
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </td>
+                                {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                        {(accountType === "admin" || accountType === "barangay captain") && (
+                                            <button
+                                                className='text-red-400 hover:text-red-300 mr-2'
+                                                onClick={() => handleDeleteClick(resident)}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
+                                        <button
+                                            className='text-indigo-400 hover:text-indigo-300'
+                                            onClick={() => handleEditClick(resident)}
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                    </td>
+                                )}
                             </motion.tr>
                         ))}
                     </tbody>
