@@ -134,15 +134,15 @@ const EditResidentForm = ({ newResident, handleInputChange, handleEditResident, 
                     </select>
                 </div>
                 <div className='flex flex-col'>
-                    <label className='text-sm mb-1'>Senior</label>
+                    <label className='text-sm mb-1'>Registered Voter</label>
                     <select
-                        name='is_senior'
+                        name='is_aVoter'
                         className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
-                        value={newResident.is_senior}
+                        value={newResident.is_aVoter}
                         onChange={handleInputChange}
                         required
                     >
-                        <option value='' disabled>Select Senior Status</option>
+                        <option value='' disabled>Select Voters Status</option>
                         <option value='yes'>Yes</option>
                         <option value='no'>No</option>
                     </select>

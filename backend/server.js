@@ -38,10 +38,10 @@ client.connect()
   .catch(err => console.error('❌ Redis connection error:', err));
 
 // Middleware to log all requests
-app.use((req, res, next) => {
-  console.log(`📌 Incoming request: ${req.method} ${req.url}`);
-  next();
-});
+//app.use((req, res, next) => {
+  //console.log(`📌 Incoming request: ${req.method} ${req.url}`);
+  //next();
+//});
 
 // Ensure the uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -160,9 +160,18 @@ app.post('/login', async (req, res) => {
 
     // Retrieve user details from Redis
     const storedPassword = await client.hGet(`user:${userId}`, 'password');
-    console.log("Stored password retrieved for userId:", userId);
-
     const accountType = await client.hGet(`user:${userId}`, 'accountType');
+    const status = await client.hGet(`user:${userId}`, 'status'); // Get user status
+
+    console.log("Stored password retrieved for userId:", userId);
+    console.log("Account type:", accountType);
+    console.log("Account status:", status);
+
+    // Check if the account is active
+    if (status !== "Active") {
+      console.error("Inactive or deleted account:", userId);
+      return res.status(403).json({ message: "This account doesn't exist anymore" });
+    }
 
     // Verify password
     const isMatch = await bcrypt.compare(password, storedPassword);
@@ -171,14 +180,15 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
-    // Store user session
-    req.session.user = { userId, email, accountType };
+    // Return success response
     res.status(200).json({ message: 'Login successful', userId, accountType });
+
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Error during login:", error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 // Fetch specific user
 app.get('/user/:userId', async (req, res) => {
@@ -257,10 +267,10 @@ app.delete('/user/:userId', async (req, res) => {
 
 // Route to save resident data
 app.post('/resident', async (req, res) => {
-  const { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_senior, employment_status, income_source, educational_level } = req.body;
+  const { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_aVoter, employment_status, income_source, educational_level } = req.body;
 
   // Validate input fields
-  if (!fullname || !age || !purok || !gender || !birthdate || !email || !phone || !civil_status || !is_pwd || !is_senior || !employment_status || !income_source || !educational_level) {
+  if (!fullname || !age || !purok || !gender || !birthdate || !email || !phone || !civil_status || !is_pwd || !is_aVoter || !employment_status || !income_source || !educational_level) {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
@@ -269,7 +279,7 @@ app.post('/resident', async (req, res) => {
     const residentId = await client.incr('residentIdCounter');
 
     // Set student data in Redis (using object syntax for Redis v4 and above)
-    const residentData = { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_senior, employment_status, income_source, educational_level };
+    const residentData = { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_aVoter, employment_status, income_source, educational_level };
 
     // Save student data in Redis hash
     await client.hSet(`resident:${residentId}`, 'fullname', residentData.fullname);
@@ -281,7 +291,7 @@ app.post('/resident', async (req, res) => {
     await client.hSet(`resident:${residentId}`, 'phone', residentData.phone);
     await client.hSet(`resident:${residentId}`, 'civil_status', residentData.civil_status);
     await client.hSet(`resident:${residentId}`, 'is_pwd', residentData.is_pwd);
-    await client.hSet(`resident:${residentId}`, 'is_senior', residentData.is_senior);
+    await client.hSet(`resident:${residentId}`, 'is_aVoter', residentData.is_aVoter);
     await client.hSet(`resident:${residentId}`, 'employment_status', residentData.employment_status); 
     await client.hSet(`resident:${residentId}`, 'income_source', residentData.income_source);
     await client.hSet(`resident:${residentId}`, 'educational_level', residentData.educational_level);
@@ -316,9 +326,9 @@ app.get('/resident', async (req, res) => {
 // Update (U)
 app.put('/resident/:residentId', async (req, res) => {
   const residentId = req.params.residentId;
-  const { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_senior, employment_status, income_source, educational_level } = req.body;
+  const { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_aVoter, employment_status, income_source, educational_level } = req.body;
 
-  if (!fullname && !age && !purok && !gender && !birthdate && !email && !phone && !civil_status && !is_pwd && !is_senior && !employment_status && !income_source && !educational_level) {
+  if (!fullname && !age && !purok && !gender && !birthdate && !email && !phone && !civil_status && !is_pwd && !is_aVoter && !employment_status && !income_source && !educational_level) {
     return res.status(400).json({ message: 'At least one field is required to update' });
   }
 
@@ -338,7 +348,7 @@ app.put('/resident/:residentId', async (req, res) => {
     if (phone) await client.hSet(`resident:${residentId}`, 'phone', phone);
     if (civil_status) await client.hSet(`resident:${residentId}`, 'civil_status', civil_status);
     if (is_pwd) await client.hSet(`resident:${residentId}`, 'is_pwd', is_pwd);
-    if (is_senior) await client.hSet(`resident:${residentId}`, 'is_senior', is_senior);
+    if (is_aVoter) await client.hSet(`resident:${residentId}`, 'is_aVoter', is_aVoter);
     if (employment_status) await client.hSet(`resident:${residentId}`, 'employment_status', employment_status);
     if (income_source) await client.hSet(`resident:${residentId}`, 'income_source', income_source);
     if (educational_level) await client.hSet(`resident:${residentId}`, 'educational_level', educational_level);
@@ -351,12 +361,101 @@ app.put('/resident/:residentId', async (req, res) => {
   }
 });
 
+
 // Delete (D)
 app.delete('/resident/:residentId', async (req, res) => {
   const residentId = req.params.residentId;
   await client.del(`resident:${residentId}`);
   res.status(200).json({ message: 'resident deleted successfully' });
 });
+
+// Route to save official data
+app.post('/official', async (req, res) => {
+  const { fullname, position, phone } = req.body;
+
+  // Validate input fields
+  if (!fullname || !position || !phone) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+    // Increment the officialId counter
+    const officialId = await client.incr('officialIdCounter');
+
+    // Set official data in Redis (using object syntax for Redis v4 and above)
+    const officialData = { fullname, position, phone };
+
+    // Save official data in Redis hash
+    await client.hSet(`official:${officialId}`, 'fullname', officialData.fullname);
+    await client.hSet(`official:${officialId}`, 'position', officialData.position);
+    await client.hSet(`official:${officialId}`, 'phone', officialData.phone);
+
+    // Respond with success message
+    res.status(201).json({ message: 'Official saved successfully', officialId });
+  } catch (error) {
+    console.error('Error saving official:', error);
+    res.status(500).json({ message: 'Failed to save official' });
+  }
+});
+
+// Fetch all officials
+app.get('/official', async (req, res) => {
+  try {
+    const keys = await client.keys('official:*');
+    const officials = await Promise.all(keys.map(async (key) => {
+      return { id: key.split(':')[1], ...(await client.hGetAll(key)) };
+    }));
+    res.json(officials);
+  } catch (error) {
+    console.error('Error fetching officials:', error);
+    res.status(500).json({ message: 'Failed to fetch officials' });
+  }
+});
+
+// Fetch specific official
+app.get('/official/:officialId', async (req, res) => {
+  const officialId = req.params.officialId;
+  const official = await client.hGetAll(`official:${officialId}`);
+  if (Object.keys(official).length === 0) {
+    return res.status(404).json({ message: 'Official not found' });
+  }
+  res.json(official);
+});
+
+// Update official
+app.put('/official/:officialId', async (req, res) => {
+  const officialId = req.params.officialId;
+  const { fullname, position, phone } = req.body;
+
+  if (!fullname && !position && !phone) {
+    return res.status(400).json({ message: 'At least one field is required to update' });
+  }
+
+  try {
+    const existingOfficial = await client.hGetAll(`official:${officialId}`);
+    if (Object.keys(existingOfficial).length === 0) {
+      return res.status(404).json({ message: 'Official not found' });
+    }
+
+    // Update official data in Redis
+    if (fullname) await client.hSet(`official:${officialId}`, 'fullname', fullname);
+    if (position) await client.hSet(`official:${officialId}`, 'position', position);
+    if (phone) await client.hSet(`official:${officialId}`, 'phone', phone);
+
+    res.status(200).json({ message: 'Official updated successfully' });
+  } catch (error) {
+    console.error('Error updating official:', error);
+    res.status(500).json({ message: 'Failed to update official' });
+  }
+});
+
+// Delete official
+app.delete('/official/:officialId', async (req, res) => {
+  const officialId = req.params.officialId;
+  await client.del(`official:${officialId}`);
+  res.status(200).json({ message: 'Official deleted successfully' });
+});
+
 
 app._router.stack.forEach((middleware) => {
   if (middleware.route) { // If middleware has a route

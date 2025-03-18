@@ -162,29 +162,37 @@ const UsersTable = () => {
                     </button>
                 </div>
             </div>
+            
 
             {showAddForm && (
                 <form className='mb-6' onSubmit={handleAddUser}>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <input
-                        type='text'
-                        name='name'
-                        placeholder='Name'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={newUser.name}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <input
-                        type='email'
-                        name='email'
-                        placeholder='Email'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={newUser.email}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <div className='relative'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-2'>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Full Name</label>
+                        <input
+                            type='text'
+                            name='name'
+                            placeholder='e.g., Juan Dela Cruz'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                            value={newUser.fullname}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Email</label>
+                        <input
+                            type='email'
+                            name='email'
+                            placeholder='e.g., juan.delacruz@gmail.com'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            value={newUser.email}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div>
+                    <div className='flex flex-col'>
+                    <label className='text-sm mb-1'>Password</label>
                         <input
                             type={showPassword ? 'text' : 'password'}
                             name='password'
@@ -198,6 +206,8 @@ const UsersTable = () => {
                             {showPassword ? <EyeOff /> : <Eye />}
                         </button>
                     </div>
+                    <div className='flex flex-col'>
+                    <label className='text-sm mb-1'>Password</label>
                     <select
                         name='accountType'
                         className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -226,6 +236,7 @@ const UsersTable = () => {
                     >
                         Add User
                     </button>
+                </div>
                 </div>
             </form>
             )}   
@@ -276,6 +287,17 @@ const UsersTable = () => {
                         <option value="Staff">Staff</option>
                         <option value="Barangay Captain">Barangay Captain</option>
                         <option value="Admin">Admin</option>
+                    </select>
+                    <select
+                        name='status'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={newUser.status}
+                        onChange={handleInputChange}
+                        required
+                    >
+                        <option value="" disabled>Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
                     </select>
                 </div>
                 <div className='flex justify-end mt-4'>

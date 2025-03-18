@@ -15,6 +15,8 @@ const ResidentsTable = () => {
     const [residents, setResidents] = useState([]);
     const [filteredResidents, setFilteredResidents] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const residentsPerPage = 10;
     const [showEditForm, setShowEditForm] = useState(false);
     const [selectedResidentId, setSelectedResidentId] = useState(null);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -29,7 +31,7 @@ const ResidentsTable = () => {
         phone: "",
         civil_status: "",
         is_pwd: "",
-        is_senior: "",
+        is_aVoter: "",
         employment_status: "",
         income_source: "",
         educational_level: ""
@@ -65,6 +67,11 @@ const ResidentsTable = () => {
         fetchUserData();
         fetchResidents();
     }, [fetchResidents]);
+
+    const currentResidents = filteredResidents.slice(
+        (currentPage - 1) * residentsPerPage,
+        currentPage * residentsPerPage
+    );
 
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
@@ -103,7 +110,7 @@ const ResidentsTable = () => {
                 phone: "",
                 civil_status: "",
                 is_pwd: "",
-                is_senior: "",
+                is_aVoter: "",
                 employment_status: "",
                 income_source: "",
                 educational_level: ""
@@ -131,7 +138,7 @@ const ResidentsTable = () => {
                 phone: "",
                 civil_status: "",
                 is_pwd: "",
-                is_senior: "",
+                is_aVoter: "",
                 employment_status: "",
                 income_source: "",
                 educational_level: ""
@@ -180,7 +187,7 @@ const ResidentsTable = () => {
                     <input
                         type='text'
                         placeholder='Search residents...'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-12 pr-6 py-2 w-96 focus:outline-none focus:ring-2 focus:ring-blue-500'
                         onChange={handleSearch}
                         value={searchTerm}
                     />
@@ -201,7 +208,7 @@ const ResidentsTable = () => {
                                     phone: "",
                                     civil_status: "",
                                     is_pwd: "",
-                                    is_senior: "",
+                                    is_aVoter: "",
                                     employment_status: "",
                                     income_source: "",
                                     educational_level: ""
@@ -270,7 +277,7 @@ const ResidentsTable = () => {
                                 PWD
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Senior
+                                Registered Voter
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Employment Status
@@ -290,7 +297,7 @@ const ResidentsTable = () => {
                     </thead>
 
                     <tbody className='divide-y divide-gray-700'>
-                        {filteredResidents.map((resident) => (
+                        {currentResidents.map((resident) => (
                             <motion.tr
                                 key={resident.id}
                                 initial={{ opacity: 0 }}
@@ -325,7 +332,7 @@ const ResidentsTable = () => {
                                     {resident.is_pwd}
                                 </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.is_senior}
+                                    {resident.is_aVoter}
                                 </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     {resident.employment_status}
@@ -358,6 +365,23 @@ const ResidentsTable = () => {
                         ))}
                     </tbody>
                 </table>
+                <div className='flex justify-between items-center mb-4'>
+                    <button
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600'
+                    >
+                        Previous
+                    </button>
+                    <span>Page {currentPage}</span>
+                    <button
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredResidents.length / residentsPerPage)))}
+                        disabled={currentPage === Math.ceil(filteredResidents.length / residentsPerPage)}
+                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600'
+                    >
+                        Next
+                    </button>
+                </div>
             </div>
         </motion.div>
     );

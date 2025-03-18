@@ -16,21 +16,25 @@ const LoginPage = () => {
         e.preventDefault();
         try {
             const response = await axios.post('http://localhost:5000/login', { email, password }, { withCredentials: true });
-            console.log("Response from server:", response.data); // Log the response
+            console.log("Response from server:", response.data);
+    
             if (response.status === 200) {
                 const { userId } = response.data;
                 sessionStorage.setItem('userId', userId);
                 console.log("Login successful", response.data);
                 navigate('/overview');
-            } else {
-                console.error('Login failed:', response.data.message);
-                setError('Invalid email or password');
             }
         } catch (err) {
-            console.error("Login error:", err); // Log the error
-            setError('Invalid email or password');
+            console.error("Login error:", err.response?.data?.message || err.message);
+            
+            if (err.response?.status === 403 && err.response?.data?.message === "This account doesn't exist anymore") {
+                setError("This account doesn't exist anymore");
+            } else {
+                setError("Invalid email or password");
+            }
         }
     };
+    
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);

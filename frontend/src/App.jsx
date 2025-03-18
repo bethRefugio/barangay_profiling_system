@@ -4,9 +4,9 @@ import Sidebar from "./components/common/Sidebar";
 import OverviewPage from "./pages/OverviewPage";
 import ResidentsPage from "./pages/ResidentsPage";
 import UsersPage from "./pages/UsersPage";
-import SalesPage from "./pages/SalesPage";
-import OrdersPage from "./pages/OrdersPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
+import DemographicsPage from "./pages/DemographicsPage";
+import HouseholdPage from "./pages/HouseholdPage";
+import OfficialsPage from "./pages/OfficialsPage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -37,9 +37,9 @@ function App() {
                     <Route path='/overview' element={<OverviewPage />} />
                     <Route path='/residents' element={<ResidentsPage userId={userId} />} />
                     <Route path='/users' element={<UsersPage />} />
-                    <Route path='/sales' element={<SalesPage />} />
-                    <Route path='/orders' element={<OrdersPage />} />
-                    <Route path='/analytics' element={<AnalyticsPage />} />
+                    <Route path='/statistics' element={<DemographicsPage />} />
+                    <Route path='/household' element={<HouseholdPage />} />
+                    <Route path='/officials' element={<OfficialsPage />} />
                     <Route path='/settings' element={<SettingsPage />} />
                 </Routes>
             </div>
