@@ -33,7 +33,7 @@ const ResidentsPage = () => {
     const totalResidents = residents.length;
     const totalMales = residents.filter(resident => resident.gender?.toLowerCase() === 'male').length;
     const totalFemales = residents.filter(resident => resident.gender?.toLowerCase() === 'female').length;
-    const totalEmployedResidents = residents.filter(resident => resident.employment_status?.toLowerCase() === 'employed').length;
+    const totalEmployedResidents = residents.filter(resident => resident.employment_status?.toLowerCase() != 'unemployed' && 'n/a').length;
 
     return (
         <div className='flex-1 overflow-auto relative z-10'>

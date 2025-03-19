@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { UserCheck, UserPlus, UsersIcon, UserX } from "lucide-react";
+import { UserCheck, UserPlus, UsersIcon, UserX, User } from "lucide-react";
 
 import Header from "../components/common/Header";
 import StatCard from "../components/common/StatCard";
@@ -15,6 +15,8 @@ const UsersPage = () => {
         totalUsers: 0,
         activeUsers: 0,
         inactiveUsers: 0,
+        residentUsers: 0,
+        staffUsers: 0,
     });
 
     useEffect(() => {
@@ -27,11 +29,15 @@ const UsersPage = () => {
                 const totalUsers = data.length;
                 const activeUsers = data.filter(user => user.status === 'Active').length;
                 const inactiveUsers = data.filter(user => user.status === 'Inactive').length;
+                const residentUsers = data.filter(user => user.accountType === 'Resident').length;
+                const staffUsers = data.filter(user => user.accountType === 'Staff').length;
 
                 setUserStats({
                     totalUsers,
                     activeUsers,
                     inactiveUsers,
+                    residentUsers,
+                    staffUsers,
                 });
             } catch (error) {
                 console.error('Error fetching users:', error);
@@ -48,7 +54,7 @@ const UsersPage = () => {
             <main className='max-w-7xl mx-auto py-6 px-3 lg:px-8'>
                 {/* STATS */}
                 <motion.div
-                    className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8'
+                    className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8'
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1 }}
@@ -71,16 +77,28 @@ const UsersPage = () => {
                         value={userStats.inactiveUsers.toLocaleString()}
                         color='#EF4444'
                     />
+                    <StatCard
+                        name='Resident Users'
+                        icon={User}
+                        value={userStats.residentUsers.toLocaleString()}
+                        color='#FACC15'
+                    />
+                    <StatCard
+                        name='Staff Users'
+                        icon={User}
+                        value={userStats.staffUsers.toLocaleString()}
+                        color='#FB923C'
+                    />
                 </motion.div>
 
                 <UsersTable />
 
-                {/* USER CHARTS */}
+                {/* USER CHARTS 
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8'>
                     <UserGrowthChart />
                     <UserActivityHeatmap />
                     <UserDemographicsChart />
-                </div>
+                </div> */}
             </main>
         </div>
     );

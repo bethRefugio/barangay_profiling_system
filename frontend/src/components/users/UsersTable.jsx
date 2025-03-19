@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
+import { Search, Edit, Trash2, Plus, Eye, EyeOff, UserPlus, Download } from "lucide-react";
 import axios from "axios";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -41,11 +41,16 @@ const UsersTable = () => {
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
         setSearchTerm(term);
-        const filtered = users.filter(
-            (user) => user.name.toLowerCase().includes(term) || user.email.toLowerCase().includes(term)
+    
+        const filtered = users.filter((user) =>
+            Object.values(user).some(value =>
+                typeof value === "string" && value.toLowerCase().includes(term)
+            )
         );
+    
         setFilteredUsers(filtered);
     };
+    
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -100,7 +105,10 @@ const UsersTable = () => {
         setSelectedUserId(user.id);
         try {
             const response = await axios.get(`${API_URL}/${user.id}`);
-            setNewUser(response.data);
+            setNewUser({
+                ...response.data,
+                password: '' // Clear password field for security
+            });
             setShowEditForm(true);
         } catch (error) {
             console.error("Error fetching user details:", error);
@@ -126,6 +134,35 @@ const UsersTable = () => {
         }
     };
 
+    const downloadCSV = () => {
+            if (filteredUsers.length === 0) {
+                toast.warn("No data available to download.");
+                return;
+            }
+    
+            const csvHeaders = [
+                "Name",
+                "Email",
+                "Role",
+                "Status",
+            ];
+    
+            const csvRows = filteredUsers.map(user =>
+                `"${user.name}","${user.email}","${user.accountType}","${user.status}"`
+            );
+    
+            const csvContent = [csvHeaders, ...csvRows].join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "user_list.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success("CSV file downloaded successfully!");
+        };
+    
+
     return (
         <motion.div
             className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700'
@@ -134,19 +171,26 @@ const UsersTable = () => {
             transition={{ delay: 0.2 }}
         >
             <ToastContainer />
-            <div className='flex justify-between items-center mb-6'>
-                <h2 className='text-xl font-semibold text-gray-100'>Users</h2>
-                <div className='relative flex items-center'>
-                    <input
-                        type='text'
-                        placeholder='Search users...'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={searchTerm}
-                        onChange={handleSearch}
-                    />
-                    <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
+            <div className='relative flex items-center justify-between mb-6'>
+                <h2 className='text-xl font-semibold text-gray-100'>User List</h2>
+                
+                {/* Centered Search & Button Container */}
+                <div className='absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-4'>
+                    <div className='relative flex items-center w-[300px]'>
+                        <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
+                        <input
+                            type='text'
+                            placeholder='Search users...'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 w-full 
+                                focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            value={searchTerm}
+                            onChange={handleSearch}
+                        />
+                    </div>
+
                     <button
-                        className='ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
                         onClick={() => {
                             setShowAddForm(true);
                             setShowEditForm(false);
@@ -158,15 +202,23 @@ const UsersTable = () => {
                             });
                         }}
                     >
-                        <Plus size={18} />
+                        <UserPlus size={18} />
                     </button>
                 </div>
+                <button
+                    className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
+                        focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
+                    onClick={downloadCSV}
+                >
+                    <Download size={18} className='mr-2' /> Download
+                </button>
             </div>
+
             
 
             {showAddForm && (
                 <form className='mb-6' onSubmit={handleAddUser}>
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-2'>
+                <div className='grid grid-cols-1 md:grid-cols-4 gap-2'>
                     <div className='flex flex-col'>
                         <label className='text-sm mb-1'>Full Name</label>
                         <input
@@ -185,42 +237,56 @@ const UsersTable = () => {
                             type='email'
                             name='email'
                             placeholder='e.g., juan.delacruz@gmail.com'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
                             value={newUser.email}
                             onChange={handleInputChange}
                             required
                         />
                     </div>
-                    <div className='flex flex-col'>
-                    <label className='text-sm mb-1'>Password</label>
-                        <input
-                            type={showPassword ? 'text' : 'password'}
-                            name='password'
-                            placeholder='Password'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
-                            value={newUser.password}
-                            onChange={handleInputChange}
-                            required
-                        />
-                        <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-2.5 text-gray-500">
-                            {showPassword ? <EyeOff /> : <Eye />}
-                        </button>
+                    <div className='flex flex-col relative'>
+                    <style>
+                            {`
+                            /* Hide the eye icon in Microsoft Edge */
+                            input::-ms-reveal {
+                            display: none;
+                            }
+
+                            /* Hide the eye icon in Chrome, Safari */
+                            input::-webkit-credentials-auto-fill-button {
+                            display: none;
+                            }
+                            `}
+                        </style>
+                        <label className='text-sm mb-1'>Password</label>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                name='password'
+                                placeholder='Enter password'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4  py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                value={newUser.password}
+                                onChange={handleInputChange}
+                                required
+                            />
+                            <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-9 pr-4 pr-10 text-gray-500">
+                                {showPassword ? <EyeOff /> : <Eye />}
+                            </button>
                     </div>
                     <div className='flex flex-col'>
-                    <label className='text-sm mb-1'>Password</label>
-                    <select
-                        name='accountType'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={newUser.accountType}
-                        onChange={handleInputChange}
-                        required
-                    >
-                        <option value="" disabled>Select Role</option>
-                        <option value="Resident">Resident</option>
-                        <option value="Staff">Staff</option>
-                        <option value="Barangay Captain">Barangay Captain</option>
-                        <option value="Admin">Admin</option>
-                    </select>
+                        <label className='text-sm mb-1'>Account Type</label>
+                        <select
+                            name='accountType'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                            value={newUser.accountType}
+                            onChange={handleInputChange}
+                            required
+                        >
+                            <option value="" disabled>Select Role</option>
+                            <option value="Resident">Resident</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Barangay Captain">Barangay Captain</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
                 </div>
                 <div className='flex justify-end mt-4'>
                     <button
@@ -237,86 +303,87 @@ const UsersTable = () => {
                         Add User
                     </button>
                 </div>
-                </div>
             </form>
             )}   
             {showEditForm && (
                 <form className='mb-6' onSubmit={handleEditUser}>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <input
-                        type='text'
-                        name='name'
-                        placeholder='Name'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={newUser.name}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <input
-                        type='email'
-                        name='email'
-                        placeholder='Email'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={newUser.email}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <div className='relative'>
-                        <input
-                            type={showPassword ? 'text' : 'password'}
-                            name='password'
-                            placeholder='Password'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
-                            value={newUser.password}
-                            onChange={handleInputChange}
-                            required
-                        />
-                        <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-2.5 text-gray-500">
-                            {showPassword ? <EyeOff /> : <Eye />}
-                        </button>
+                    <div className='grid grid-cols-1 md:grid-cols-4 gap-2'>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Full Name</label>
+                            <input
+                                type='text'
+                                name='name'
+                                placeholder='e.g., Juan Dela Cruz'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                value={newUser.name}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Email</label>
+                            <input
+                                type='email'
+                                name='email'
+                                placeholder='e.g., juan.delacruz@gmail.com'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                value={newUser.email}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                        <div className='flex flex-col relative'>
+                        <style>
+                            {`
+                            /* Hide the eye icon in Microsoft Edge */
+                            input::-ms-reveal {
+                            display: none;
+                            }
+
+                            /* Hide the eye icon in Chrome, Safari */
+                            input::-webkit-credentials-auto-fill-button {
+                            display: none;
+                            }
+                            `}
+                        </style>
+                            <label className='text-sm mb-1'>Password</label>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                name='password'
+                                placeholder='Enter new password'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4  py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                value={newUser.password}
+                                onChange={handleInputChange}
+                                required
+                            />
+                            <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-9 pr-4 pr-10 text-gray-500">
+                                {showPassword ? <EyeOff /> : <Eye />}
+                            </button>
+                        </div>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Role</label>
+                            <select
+                                name='accountType'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 pr-10 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                value={newUser.accountType}
+                                onChange={handleInputChange}
+                                required
+                            >
+                                <option value="" disabled>Select Role</option>
+                                <option value="Resident">Resident</option>
+                                <option value="Staff">Staff</option>
+                                <option value="Barangay Captain">Barangay Captain</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
                     </div>
-                    <select
-                        name='accountType'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={newUser.accountType}
-                        onChange={handleInputChange}
-                        required
-                    >
-                        <option value="" disabled>Select Role</option>
-                        <option value="Resident">Resident</option>
-                        <option value="Staff">Staff</option>
-                        <option value="Barangay Captain">Barangay Captain</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-                    <select
-                        name='status'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={newUser.status}
-                        onChange={handleInputChange}
-                        required
-                    >
-                        <option value="" disabled>Select Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
-                </div>
-                <div className='flex justify-end mt-4'>
-                    <button
-                        type='button'
-                        className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2'
-                        onClick={() => setShowEditForm(false)}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type='submit'
-                        className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
-                    >
-                        Update User
-                    </button>
-                </div>
-            </form>
+                    <div className='flex justify-end mt-4'>
+                        <button type='button' className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2' onClick={() => setShowEditForm(false)}>Cancel</button>
+                        <button type='submit' className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'>Update User</button>
+                    </div>
+                </form>
             )}
+
 
             {showDeleteConfirmation && (
                 <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>

@@ -9,6 +9,7 @@ import PurokDistribution from "../components/statistics/PurokDistribution";
 import AgeDistribution from "../components/statistics/AgeDistribution";
 import GenderDistribution from "../components/statistics/GenderDistribution";
 import CivilStatusDistribution from "../components/statistics/CivilStatusDistribution";
+import EducationalLevelDistribution from "../components/residents/EducationLevelDistribution";
 
 const DemographicsPage = () => {
 	const [residents, setResidents] = useState([]);
@@ -32,7 +33,7 @@ const DemographicsPage = () => {
 		const totalResidents = residents.length;
 		const totalMales = residents.filter(resident => resident.gender?.toLowerCase() === 'male').length;
 		const totalFemales = residents.filter(resident => resident.gender?.toLowerCase() === 'female').length;
-		const totalEmployedResidents = residents.filter(resident => resident.employment_status?.toLowerCase() === 'employed').length;
+		const totalEmployedResidents = residents.filter(resident => resident.employment_status?.toLowerCase() != 'unemployed' && 'n/a').length;
 	
 		
 	return (
@@ -53,15 +54,18 @@ const DemographicsPage = () => {
                     <StatCard name='Total Employed Residents' icon={BookCheck} value={totalEmployedResidents} color='#EF4444' />
                 </motion.div>
 				
-
-				<SalesOverviewChart />
+				<div className='mb-8'>
+				<EducationalLevelDistribution />
+				</div>
 
 				<div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
 					<PurokDistribution />
 					<AgeDistribution />
 					<GenderDistribution />
 					<CivilStatusDistribution />
+					
 				</div>
+				
 			</main>
 		</div>
 	);

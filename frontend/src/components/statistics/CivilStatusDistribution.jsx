@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Label } from "recharts";
+import { Download } from "lucide-react"; // Using Download icon from lucide-react
+import html2canvas from "html2canvas";
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -11,12 +13,12 @@ const CustomTooltip = ({ active, payload, label }) => {
             </div>
         );
     }
-
     return null;
 };
 
 const CivilStatusDistribution = () => {
     const [statusData, setStatusData] = useState([]);
+    const chartRef = useRef(null);
 
     useEffect(() => {
         const fetchResidents = async () => {
@@ -32,7 +34,7 @@ const CivilStatusDistribution = () => {
                 };
 
                 residents.forEach(resident => {
-                    const status = resident.civilStatus.toLowerCase();
+                    const status = resident.civil_status.toLowerCase();
                     if (statusGroups[status] !== undefined) {
                         statusGroups[status]++;
                     }
@@ -54,6 +56,18 @@ const CivilStatusDistribution = () => {
         fetchResidents();
     }, []);
 
+    // Function to download chart as PNG
+    const downloadChart = async () => {
+        if (chartRef.current) {
+            html2canvas(chartRef.current, { backgroundColor: "#1F2937" }).then(canvas => {
+                const link = document.createElement("a");
+                link.href = canvas.toDataURL("image/png");
+                link.download = "civil_status_distribution.png";
+                link.click();
+            });
+        }
+    };
+
     return (
         <motion.div
             className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700'
@@ -61,15 +75,25 @@ const CivilStatusDistribution = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
         >
-            <h2 className='text-xl font-semibold text-gray-100 mb-4'>Civil Status Distribution</h2>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className='text-xl font-semibold text-gray-100'>Civil Status Distribution</h2>
+                <button 
+                    onClick={downloadChart} 
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                    <Download className="mr-2 w-5 h-5" /> Download
+                </button>
+            </div>
 
-            <div style={{ width: "100%", height: 300 }}>
-                <ResponsiveContainer>
+            <div ref={chartRef} className="bg-gray-900 p-4 rounded-lg">
+                <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={statusData}>
                         <XAxis dataKey="name">
-                            <Label value="Civil Status" offset={-5} position="insideBottom" />
+                            <Label value="Civil Status" offset={-5} position="insideBottom" fill="#ffffff" />
                         </XAxis>
-                        <YAxis allowDecimals={false} />
+                        <YAxis allowDecimals={false}>
+                            <Label value="No. of Residents" angle={-90} position="insideLeft" fill="#ffffff" />
+                        </YAxis>
                         <Tooltip
                             content={<CustomTooltip />}
                             contentStyle={{

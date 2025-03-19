@@ -371,44 +371,67 @@ app.delete('/resident/:residentId', async (req, res) => {
 
 // Route to save official data
 app.post('/official', async (req, res) => {
-  const { fullname, position, phone } = req.body;
+  const { fullname, position, phone, profilePhoto } = req.body;
 
-  // Validate input fields
   if (!fullname || !position || !phone) {
-    return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'Full name, position, and phone are required' });
   }
 
   try {
-    // Increment the officialId counter
-    const officialId = await client.incr('officialIdCounter');
+      const officialId = await client.incr('officialIdCounter');
 
-    // Set official data in Redis (using object syntax for Redis v4 and above)
-    const officialData = { fullname, position, phone };
+      const officialData = {
+        fullname,
+        position,
+        phone,
+        profilePhoto: profilePhoto && profilePhoto.trim() !== "" ? profilePhoto : 'uploads/default-profile.png'
+    };
+    
 
-    // Save official data in Redis hash
-    await client.hSet(`official:${officialId}`, 'fullname', officialData.fullname);
-    await client.hSet(`official:${officialId}`, 'position', officialData.position);
-    await client.hSet(`official:${officialId}`, 'phone', officialData.phone);
+      await client.hSet(`official:${officialId}`, 'fullname', officialData.fullname);
+      await client.hSet(`official:${officialId}`, 'position', officialData.position);
+      await client.hSet(`official:${officialId}`, 'phone', officialData.phone);
+      await client.hSet(`official:${officialId}`, 'profilePhoto', officialData.profilePhoto);
 
-    // Respond with success message
-    res.status(201).json({ message: 'Official saved successfully', officialId });
+      res.status(201).json({ message: 'Official saved successfully', officialId });
   } catch (error) {
-    console.error('Error saving official:', error);
-    res.status(500).json({ message: 'Failed to save official' });
+      console.error('Error saving official:', error);
+      res.status(500).json({ message: 'Failed to save official' });
+  }
+});
+
+// Route to upload an official's profile photo
+app.post('/upload-official-photo', upload.single('profilePhoto'), async (req, res) => {
+  try {
+      const { officialId } = req.body;
+      if (!officialId) {
+          return res.status(400).json({ message: 'Official ID is required' });
+      }
+
+      const profilePhotoPath = req.file.path;
+
+      // Store the image path in Redis
+      await client.hSet(`official:${officialId}`, 'profilePhoto', profilePhotoPath);
+
+      res.status(200).json({ message: 'Photo uploaded successfully', profilePhoto: profilePhotoPath });
+  } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      res.status(500).json({ message: 'Failed to upload photo' });
   }
 });
 
 // Fetch all officials
 app.get('/official', async (req, res) => {
   try {
-    const keys = await client.keys('official:*');
-    const officials = await Promise.all(keys.map(async (key) => {
-      return { id: key.split(':')[1], ...(await client.hGetAll(key)) };
-    }));
-    res.json(officials);
+      const keys = await client.keys('official:*');
+      const officials = await Promise.all(keys.map(async (key) => {
+          return { id: key.split(':')[1], ...(await client.hGetAll(key)) };
+      }));
+
+      res.json(officials);
   } catch (error) {
-    console.error('Error fetching officials:', error);
-    res.status(500).json({ message: 'Failed to fetch officials' });
+      console.error('Error fetching officials:', error);
+      res.status(500).json({ message: 'Failed to fetch officials' });
   }
 });
 
@@ -424,30 +447,38 @@ app.get('/official/:officialId', async (req, res) => {
 
 // Update official
 app.put('/official/:officialId', async (req, res) => {
-  const officialId = req.params.officialId;
-  const { fullname, position, phone } = req.body;
+  const { officialId } = req.params;
+  const { fullname, position, phone, profilePhoto } = req.body;
 
-  if (!fullname && !position && !phone) {
-    return res.status(400).json({ message: 'At least one field is required to update' });
+  if (!fullname && !position && !phone && !profilePhoto) {
+      return res.status(400).json({ message: 'At least one field is required to update' });
   }
 
   try {
-    const existingOfficial = await client.hGetAll(`official:${officialId}`);
-    if (Object.keys(existingOfficial).length === 0) {
-      return res.status(404).json({ message: 'Official not found' });
-    }
+      const existingOfficial = await client.hGetAll(`official:${officialId}`);
+      if (Object.keys(existingOfficial).length === 0) {
+          return res.status(404).json({ message: 'Official not found' });
+      }
 
-    // Update official data in Redis
-    if (fullname) await client.hSet(`official:${officialId}`, 'fullname', fullname);
-    if (position) await client.hSet(`official:${officialId}`, 'position', position);
-    if (phone) await client.hSet(`official:${officialId}`, 'phone', phone);
+      // Update only the provided fields in Redis
+      if (fullname) await client.hSet(`official:${officialId}`, 'fullname', fullname);
+      if (position) await client.hSet(`official:${officialId}`, 'position', position);
+      if (phone) await client.hSet(`official:${officialId}`, 'phone', phone);
+      if (profilePhoto) {
+          await client.hSet(`official:${officialId}`, 'profilePhoto', profilePhoto);
+      } else {
+          await client.hSet(`official:${officialId}`, 'profilePhoto', 'uploads/default-profile.png');
+      }
 
-    res.status(200).json({ message: 'Official updated successfully' });
+      res.status(200).json({ message: 'Official updated successfully' });
   } catch (error) {
-    console.error('Error updating official:', error);
-    res.status(500).json({ message: 'Failed to update official' });
+      console.error('Error updating official:', error);
+      res.status(500).json({ message: 'Failed to update official' });
   }
 });
+
+
+
 
 // Delete official
 app.delete('/official/:officialId', async (req, res) => {

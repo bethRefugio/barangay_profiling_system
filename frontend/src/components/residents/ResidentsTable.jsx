@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from "framer-motion";
-import { Edit, Search, Trash2, UserRoundPlus } from "lucide-react";
+import { Edit, Search, Trash2, UserRoundPlus, Download } from "lucide-react";
 import axios from "axios";
 import AddResidentForm from './AddResidentForm';
 import EditResidentForm from './EditResidentForm';
@@ -173,6 +173,31 @@ const ResidentsTable = () => {
         }
     };
 
+    const downloadCSV = () => {
+        if (filteredResidents.length === 0) {
+            toast.warn("No data available to download.");
+            return;
+        }
+
+        const csvHeaders = [
+            "Full Name, Age, Purok, Gender, Birthdate, Email, Phone, Civil Status, PWD, Registered Voter, Employment Status, Income Source, Educational Level"
+        ];
+
+        const csvRows = filteredResidents.map(resident =>
+            `"${resident.fullname}","${resident.age}","${resident.purok}","${resident.gender}","${resident.birthdate}","${resident.email}","${resident.phone}","${resident.civil_status}","${resident.is_pwd}","${resident.is_aVoter}","${resident.employment_status}","${resident.income_source}","${resident.educational_level}"`
+        );
+
+        const csvContent = [csvHeaders, ...csvRows].join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "residents_list.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("CSV file downloaded successfully!");
+    };
+
     return (
         <motion.div
             className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8'
@@ -181,44 +206,58 @@ const ResidentsTable = () => {
             transition={{ delay: 0.2 }}
         >
             <ToastContainer />
-            <div className='flex justify-between items-center mb-6'>
+            <div className='relative flex items-center justify-between mb-6'>
                 <h2 className='text-xl font-semibold text-gray-100'>Resident List</h2>
-                <div className='relative flex items-center'>
-                    <input
-                        type='text'
-                        placeholder='Search residents...'
-                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-12 pr-6 py-2 w-96 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        onChange={handleSearch}
-                        value={searchTerm}
-                    />
-                    <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
-                   
-                        <button
-                            className='ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            onClick={() => {
-                                setShowAddForm(true);
-                                setShowEditForm(false);
-                                setNewResident({
-                                    fullname: "",
-                                    age: "",
-                                    purok: "",
-                                    gender: "",
-                                    birthdate: "",
-                                    email: "",
-                                    phone: "",
-                                    civil_status: "",
-                                    is_pwd: "",
-                                    is_aVoter: "",
-                                    employment_status: "",
-                                    income_source: "",
-                                    educational_level: ""
-                                });
-                            }}
-                        >
-                            <UserRoundPlus size={18} />
-                        </button>
-                  </div>
+
+                <div className='absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-4'>
+
+                    <div className='relative flex items-center w-[350px]'>
+                        <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
+                        <input
+                            type='text'
+                            placeholder='Search residents...'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-12 pr-6 py-2 w-full 
+                                focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            onChange={handleSearch}
+                            value={searchTerm}
+                        />
+                    </div>
+
+                    <button
+                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
+                        onClick={() => {
+                            setShowAddForm(true);
+                            setShowEditForm(false);
+                            setNewResident({
+                                fullname: "",
+                                age: "",
+                                purok: "",
+                                gender: "",
+                                birthdate: "",
+                                email: "",
+                                phone: "",
+                                civil_status: "",
+                                is_pwd: "",
+                                is_aVoter: "",
+                                employment_status: "",
+                                income_source: "",
+                                educational_level: ""
+                            });
+                        }}
+                    >
+                        <UserRoundPlus size={18} />
+                    </button>
+                </div>
+                <button
+                    className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
+                        focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
+                    onClick={downloadCSV}
+                >
+                    <Download size={18} className='mr-2' /> Download
+                </button>
             </div>
+
 
             {showAddForm && (
                 <AddResidentForm
@@ -365,7 +404,9 @@ const ResidentsTable = () => {
                         ))}
                     </tbody>
                 </table>
-                <div className='flex justify-between items-center mb-4'>
+                
+            </div>
+            <div className='flex justify-between items-center mb-4 mt-6'>
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
@@ -382,7 +423,6 @@ const ResidentsTable = () => {
                         Next
                     </button>
                 </div>
-            </div>
         </motion.div>
     );
 };

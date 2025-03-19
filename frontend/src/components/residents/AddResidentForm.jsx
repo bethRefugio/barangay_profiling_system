@@ -2,11 +2,21 @@ import React, { useState } from 'react';
 
 const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, setShowForm }) => {
     const [otherIncomeSource, setOtherIncomeSource] = useState('');
+    const [otherEmploymentStatus, setOtherEmploymentStatus] = useState('');
+
 
     const handleIncomeSourceChange = (e) => {
         const { value } = e.target;
         if (value === 'Others') {
             setOtherIncomeSource('');
+        }
+        handleInputChange(e);
+    };
+
+    const handleEmploymentStatusChange = (e) => {
+        const { value } = e.target;
+        if (value === 'Others') {
+            setOtherEmploymentStatus('');
         }
         handleInputChange(e);
     };
@@ -112,11 +122,11 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                         required
                     >
                         <option value='' disabled>Select Civil Status</option>
-                        <option value='single'>Single</option>
-                        <option value='married'>Married</option>
-                        <option value='separated'>Separated</option>
-                        <option value='divorced'>Divorced</option>
-                        <option value='widowed'>Widowed</option>
+                        <option value='Single'>Single</option>
+                        <option value='Married'>Married</option>
+                        <option value='Separated'>Separated</option>
+                        <option value='Divorced'>Divorced</option>
+                        <option value='Widowed'>Widowed</option>
                     </select>
                 </div>
                 <div className='flex flex-col'>
@@ -129,8 +139,8 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                         required
                     >
                         <option value='' disabled>Select PWD Status</option>
-                        <option value='yes'>Yes</option>
-                        <option value='no'>No</option>
+                        <option value='Yes'>Yes</option>
+                        <option value='No'>No</option>
                     </select>
                 </div>
                 <div className='flex flex-col'>
@@ -143,8 +153,8 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                         required
                     >
                         <option value='' disabled>Select Voter Status</option>
-                        <option value='yes'>Yes</option>
-                        <option value='no'>No</option>
+                        <option value='Yes'>Yes</option>
+                        <option value='Np'>No</option>
                     </select>
                 </div>
                 <div className='flex flex-col'>
@@ -162,7 +172,8 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                         <option value='Junior High School'>Junior High School</option>
                         <option value='Senior High School'>Senior High School</option>
                         <option value='Technical-Vocational Education and Training (TVET)'>Technical-Vocational Education and Training (TVET)</option>
-                        <option value='Undergraduate (Tertiary) Education'>Undergraduate (Tertiary) Education</option>
+                        <option value='Undergraduate (Tertiary) Education'>Tertiary (College) Education</option>
+                        <option value="Master's Education">Master's Education</option>
                         <option value='Graduate Education'>Graduate Education</option>
                         <option value='Alternative Learning System (ALS)'>Alternative Learning System (ALS)</option>
                         <option value='Special Education (SPED)'>Special Education (SPED)</option>
@@ -175,7 +186,7 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                         name='employment_status'
                         className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
                         value={newResident.employment_status}
-                        onChange={handleInputChange}
+                        onChange={handleEmploymentStatusChange}
                         required
                     >
                         <option value='' disabled>Select Employment Status</option>
@@ -193,6 +204,16 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                         <option value='Informal Workers'>Informal Workers</option>
                         <option value='Others'>Others</option>
                     </select>
+                    {newResident.employment_status === 'Others' && (
+                        <input
+                            type='text'
+                            name='other_employment_status'
+                            placeholder='Please specify'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                            value={otherEmploymentStatus}
+                            onChange={(e) => setOtherEmploymentStatus(e.target.value)}
+                        />
+                    )}
                 </div>
                 <div className='flex flex-col'>
                     <label className='text-sm mb-1'>Income Source</label>

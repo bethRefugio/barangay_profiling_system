@@ -12,7 +12,7 @@ const SIDEBAR_ITEMS = [
         href: "/",
     },
     { name: "Residents", icon: ContactRound, color: "#8B5CF6", href: "/residents" },
-    { name: "Household", icon: House, color: "#F59E0B", href: "/household" },   
+    //{ name: "Household", icon: House, color: "#F59E0B", href: "/household" },   
     { name: "Demographics", icon: ChartNoAxesCombined, color: "#10B981", href: "/statistics" },
     { name: "Users", icon: Users, color: "#EC4899", href: "/users", roles: ["admin", "barangay captain"] },
     { name: "Officials", icon: Phone, color: "#3B82F6", href: "/officials" },

@@ -73,20 +73,30 @@ const OfficialsList = () => {
     const handleEditOfficial = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`${API_URL}/${selectedOfficialId}`, newOfficial);
+            await axios.put(`${API_URL}/${selectedOfficialId}`, {
+                fullname: newOfficial.fullname,
+                position: newOfficial.position,
+                phone: newOfficial.phone,
+                profilePhoto: newOfficial.profilePhoto || "uploads/default-profile.png"
+            });
+    
             toast.success('Official updated successfully!');
             fetchOfficials();
             setShowEditForm(false);
             setNewOfficial({
                 fullname: "",
                 position: "",
-                phone: ""
+                phone: "",
+                profilePhoto: null
             });
         } catch (error) {
             console.error("Error editing official:", error);
             toast.error('Error editing official!');
         }
     };
+    
+    
+    
 
     const handleDeleteClick = (officialId) => {
         setSelectedOfficialId(officialId);
@@ -108,20 +118,37 @@ const OfficialsList = () => {
     const handleAddOfficial = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(API_URL, newOfficial);
+            let profilePhotoPath = 'uploads/default-profile.png';
+    
+            if (newOfficial.profilePhoto) {
+                const formData = new FormData();
+                formData.append('profilePhoto', newOfficial.profilePhoto);
+                formData.append('officialId', newOfficial.id);
+    
+                const uploadResponse = await axios.post('http://localhost:5000/upload-official-photo', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+    
+                profilePhotoPath = uploadResponse.data.profilePhoto;
+            }
+    
+            await axios.post(API_URL, { ...newOfficial, profilePhoto: profilePhotoPath });
+    
             toast.success('Official added successfully!');
             fetchOfficials();
             setShowAddForm(false);
             setNewOfficial({
                 fullname: "",
                 position: "",
-                phone: ""
+                phone: "",
+                profilePhoto: null,
             });
         } catch (error) {
             console.error("Error adding official:", error);
             toast.error('Error adding official!');
         }
     };
+    
 
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
@@ -135,11 +162,20 @@ const OfficialsList = () => {
         setFilteredOfficials(filtered);
     };
 
+    useEffect(() => {
+        if (searchTerm === "") {
+            setFilteredOfficials(officials);
+        }
+    }, [searchTerm, officials]);
+    
+
     return (
         <div>
             <ToastContainer />
-            <div className="flex justify-end items-center space-x-4 mb-4">
-            <div className="relative">
+            <h2 className="text-4xl font-bold mb-8 text-center">Brgy. Bunawan List of Officials</h2>
+            
+            <div className="flex justify-center items-center space-x-4 mb-10">
+           <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
                     type="text"
@@ -159,60 +195,71 @@ const OfficialsList = () => {
             )}
         </div>
 
-            {showAddForm && (
-                <form className='mb-6' onSubmit={handleAddOfficial}>
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-2'>
-                        <div className='flex flex-col'>
-                            <label className='text-sm mb-1'>Full Name</label>
-                            <input
-                                type='text'
-                                name='fullname'
-                                placeholder='e.g., Juan Dela Cruz'
-                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
-                                value={newOfficial.fullname}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
-                        <div className='flex flex-col'>
-                            <label className='text-sm mb-1'>Position</label>
-                            <select
-                                name='position'
-                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
-                                value={newOfficial.position}
-                                onChange={handleInputChange}
-                                required
-                            >
-                                <option value='' disabled>Select Position</option>
-                                <option value="Barangay Captain">Barangay Captain</option>
-                                <option value="Kagawad">Barangay Councilor (Kagawad)</option>
-                                <option value="SK Chairperson">Sangguniang Kabataan (SK) Chairperson</option>
-                                <option value="Barangay Secretary">Barangay Secretary</option>
-                                <option value="Barangay Treasure">Barangay Treasurer</option>
-                                <option value="Barangay Tanod">Barangay Tanod (Peace and Order Officer)</option>
-                                <option value="Barangay Health Worker(BHW)">Barangay Health Worker (BHW)</option>
-                                <option value="Barangay Nutrition Scholar (BNS)">Barangay Nutrition Scholar (BNS)</option>
-                                <option value="Lupon Member">Barangay Lupon Member</option>
-                                <option value="BDRRMC Member">Barangay Disaster Risk Reduction and Management Council (BDRRMC) Member</option>
-                            </select>
-                        </div>
-                        <div className='flex flex-col'>
-                            <label className='text-sm mb-1'>Phone</label>
-                            <input
-                                type='text'
-                                name='phone'
-                                placeholder='e.g., 09123456789'
-                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
-                                value={newOfficial.phone}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
+        {showAddForm && (
+        <form className='mb-6' onSubmit={handleAddOfficial}>
+            <div className='grid grid-cols-1 md:grid-cols-2 pl-20 gap-y-2 gap-x-0'>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Full Name</label>
+                        <input
+                            type='text'
+                            name='fullname'
+                            placeholder='e.g., Juan Dela Cruz'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
+                            value={newOfficial.fullname}
+                            onChange={handleInputChange}
+                            required
+                        />
                     </div>
-                    <div className='flex justify-end mt-4'>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Position</label>
+                        <select
+                            name='position'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
+                            value={newOfficial.position}
+                            onChange={handleInputChange}
+                            required
+                        >
+                            <option value='' disabled>Select Position</option>
+                            <option value="Barangay Captain">Barangay Captain</option>
+                            <option value="Kagawad">Barangay Councilor (Kagawad)</option>
+                            <option value="SK Chairperson">Sangguniang Kabataan (SK) Chairperson</option>
+                            <option value="Barangay Secretary">Barangay Secretary</option>
+                            <option value="Barangay Treasure">Barangay Treasurer</option>
+                            <option value="Barangay Tanod">Barangay Tanod (Peace and Order Officer)</option>
+                            <option value="Barangay Health Worker(BHW)">Barangay Health Worker (BHW)</option>
+                            <option value="Barangay Nutrition Scholar (BNS)">Barangay Nutrition Scholar (BNS)</option>
+                            <option value="Lupon Member">Barangay Lupon Member</option>
+                            <option value="BDRRMC Member">Barangay Disaster Risk Reduction and Management Council (BDRRMC) Member</option>
+                        </select>
+                    </div>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Phone</label>
+                        <input
+                            type='text'
+                            name='phone'
+                            placeholder='e.g., 09123456789'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
+                            value={newOfficial.phone}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Profile Photo</label>
+                        <input
+                            type='file'
+                            accept='image/*'
+                            onChange={(e) => setNewOfficial({ ...newOfficial, profilePhoto: e.target.files[0] })}
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
+                        />
+                    </div>
+
+
+                    {/* Button Container */}
+                    <div className='flex justify-end space-x-2 md:col-span-2 mt-4 pr-20'>
                         <button
                             type='button'
-                            className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2'
+                            className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
                             onClick={() => setShowAddForm(false)}
                         >
                             Cancel
@@ -224,8 +271,11 @@ const OfficialsList = () => {
                             Add Official
                         </button>
                     </div>
-                </form>
-            )}
+
+                </div>
+            </form>
+        )}
+
 
             {showEditForm && (
                 <form className='mb-6' onSubmit={handleEditOfficial}>
@@ -248,7 +298,7 @@ const OfficialsList = () => {
                                 type='text'
                                 name='position'
                                 placeholder='e.g., Kagawad'
-                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 w-70 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
                                 value={newOfficial.position}
                                 onChange={handleInputChange}
                                 required
@@ -264,6 +314,15 @@ const OfficialsList = () => {
                                 value={newOfficial.phone}
                                 onChange={handleInputChange}
                                 required
+                            />
+                        </div>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Profile Photo</label>
+                            <input
+                                type='file'
+                                accept='image/*'
+                                onChange={(e) => setNewOfficial({ ...newOfficial, profilePhoto: e.target.files[0] })}
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
                             />
                         </div>
                     </div>
@@ -294,43 +353,50 @@ const OfficialsList = () => {
 
             <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8'>
                 {(searchTerm ? filteredOfficials : officials).map((item, index) => (
-
                     <motion.div
                         key={item.id}
-                        className='bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg shadow-lg rounded-xl p-6 border border-gray-700'
+                        className='bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg shadow-lg rounded-xl p-6 border border-gray-700 flex flex-col items-center'
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                     >
-                        <div className='flex items-center justify-between'>
-                            <div>
-                                <h3 className='text-sm font-medium text-gray-400'>{item.position}</h3>
-                                <p className='mt-1 text-xl font-semibold text-gray-100'>{item.fullname}</p>
-                                <p className='mt-1 text-sm text-gray-400'>{item.phone}</p>
-                            </div>
-                            <div className='p-3 rounded-full bg-opacity-20 bg-green-500'>
-                                <PhoneIncoming className='size-6 text-green-500' />
-                            </div>
+                        {/* Profile Photo Centered at the Top */}
+                        <img
+                            src={`http://localhost:5000/${item.profilePhoto ? item.profilePhoto.replace(/^uploads\//, '') : 'uploads/default-profile.png'}`}
+                            alt="Official's Photo"
+                            className='w-28 h-28 object-cover rounded-full border border-gray-500 mb-3'
+                            onError={(e) => { e.target.src = 'http://localhost:5000/uploads/default-profile.png'; }} 
+                        />
+
+                        {/* Official's Information */}
+                        <div className='text-center'>
+                            <h3 className='text-sm font-medium text-gray-400'>{item.position}</h3>
+                            <p className='mt-1 text-xl font-semibold text-gray-100'>{item.fullname}</p>
+                            <p className='mt-1 text-sm text-gray-400'>{item.phone}</p>
                         </div>
+
+                        {/* Buttons for Edit and Delete (If Admin or Barangay Captain) */}
                         {(accountType === "admin" || accountType === "barangay captain") && (
-                        <div className='flex justify-end mt-4'>
-                            <button
-                                className='text-indigo-400 hover:text-indigo-300 mr-2'
-                                onClick={() => handleEditClick(item)}
-                            >
-                                <Edit size={18} />
-                            </button>
-                            <button
-                                className='text-red-400 hover:text-red-300'
-                                onClick={() => handleDeleteClick(item.id)}
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
+                            <div className='flex justify-end mt-4'>
+                                <button
+                                    className='text-indigo-400 hover:text-indigo-300 mr-2'
+                                    onClick={() => handleEditClick(item)}
+                                >
+                                    <Edit size={18} />
+                                </button>
+                                <button
+                                    className='text-red-400 hover:text-red-300'
+                                    onClick={() => handleDeleteClick(item.id)}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
                         )}
                     </motion.div>
                 ))}
             </div>
+
+
         </div>
     );
 };
