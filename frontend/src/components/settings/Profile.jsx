@@ -50,7 +50,30 @@ const Profile = () => {
         e.preventDefault();
         try {
             const userId = sessionStorage.getItem('userId');
-            await axios.put(`http://localhost:5000/user/${userId}`, updatedUser, { withCredentials: true });
+    
+            // Create FormData object for image upload
+            const formData = new FormData();
+            formData.append('name', updatedUser.name);
+            formData.append('email', updatedUser.email);
+            if (updatedUser.password) {
+                formData.append('password', updatedUser.password);
+            }
+    
+            // Check if a new profile photo was selected
+            if (profilePhoto instanceof File) {
+                formData.append('profilePhoto', profilePhoto);
+            }
+    
+            // Debugging: Log what is being sent
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+    
+            await axios.put(`http://localhost:5000/user/${userId}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
+            });
+    
             toast.success('Profile updated successfully!');
             setEditMode(false);
             setUser({ ...user, ...updatedUser });
@@ -59,30 +82,19 @@ const Profile = () => {
             toast.error('Error updating profile!');
         }
     };
+    
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
 
-    const handleProfilePhotoChange = async (e) => {
+    const handleProfilePhotoChange = (e) => {
         const file = e.target.files[0];
-        const formData = new FormData();
-        formData.append('profilePhoto', file);
-
-        try {
-            const response = await axios.post('http://localhost:5000/upload-profile-photo', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-                withCredentials: true
-            });
-            setProfilePhoto(response.data.profilePhoto);
-            toast.success('Profile photo updated successfully!');
-        } catch (error) {
-            console.error('Error uploading profile photo:', error);
-            toast.error('Error uploading profile photo!');
+        if (file) {
+            setProfilePhoto(file);
         }
     };
+    
 
     const handleLogout = () => {
         sessionStorage.removeItem('userId');

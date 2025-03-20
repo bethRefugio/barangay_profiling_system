@@ -227,11 +227,12 @@ app.get('/user', async (req, res) => {
 });
 
 // Update (U)
-app.put('/user/:userId', async (req, res) => {
+app.put('/user/:userId', upload.single('profilePhoto'), async (req, res) => {
   const userId = req.params.userId;
-  const { name, email, password, accountType, status } = req.body;
+  let { name, email, password, accountType, status } = req.body;
+  let profilePhoto = req.file ? req.file.path : null; // Get uploaded file path
 
-  if (!name && !email && !password && !accountType && !status) {
+  if (!name && !email && !password && !accountType && !status && !profilePhoto) {
       return res.status(400).json({ message: 'At least one field is required to update' });
   }
 
@@ -241,7 +242,7 @@ app.put('/user/:userId', async (req, res) => {
           return res.status(404).json({ message: 'User not found' });
       }
 
-      // Update user data in Redis
+      // Update text fields
       if (name) await client.hSet(`user:${userId}`, 'name', name);
       if (email) await client.hSet(`user:${userId}`, 'email', email);
       if (password) {
@@ -251,12 +252,18 @@ app.put('/user/:userId', async (req, res) => {
       if (accountType) await client.hSet(`user:${userId}`, 'accountType', accountType);
       if (status) await client.hSet(`user:${userId}`, 'status', status);
 
+      // Update profile photo if a new one is uploaded
+      if (profilePhoto) {
+          await client.hSet(`user:${userId}`, 'profilePhoto', profilePhoto);
+      }
+
       res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
       console.error('Error updating user:', error);
       res.status(500).json({ message: 'Failed to update user' });
   }
 });
+
 
 // Delete (D) user
 app.delete('/user/:userId', async (req, res) => {
@@ -420,20 +427,28 @@ app.post('/upload-official-photo', upload.single('profilePhoto'), async (req, re
   }
 });
 
-// Fetch all officials
 app.get('/official', async (req, res) => {
   try {
       const keys = await client.keys('official:*');
       const officials = await Promise.all(keys.map(async (key) => {
-          return { id: key.split(':')[1], ...(await client.hGetAll(key)) };
+          const official = await client.hGetAll(key);
+
+          // Ensure the official has all required fields
+          if (!official.fullname || !official.position || !official.phone) {
+              return null; // Ignore empty or incomplete entries
+          }
+
+          return { id: key.split(':')[1], ...official };
       }));
 
-      res.json(officials);
+      // Remove null values from the list
+      res.json(officials.filter(o => o !== null));
   } catch (error) {
       console.error('Error fetching officials:', error);
       res.status(500).json({ message: 'Failed to fetch officials' });
   }
 });
+
 
 // Fetch specific official
 app.get('/official/:officialId', async (req, res) => {
@@ -446,9 +461,10 @@ app.get('/official/:officialId', async (req, res) => {
 });
 
 // Update official
-app.put('/official/:officialId', async (req, res) => {
-  const { officialId } = req.params;
-  const { fullname, position, phone, profilePhoto } = req.body;
+app.put('/official/:officialId', upload.single('profilePhoto'), async (req, res) => {
+  const officialId = req.params.officialId;
+  let { fullname, position, phone } = req.body;
+  let profilePhoto = req.file ? req.file.path : null; // Get uploaded file path
 
   if (!fullname && !position && !phone && !profilePhoto) {
       return res.status(400).json({ message: 'At least one field is required to update' });
@@ -460,14 +476,14 @@ app.put('/official/:officialId', async (req, res) => {
           return res.status(404).json({ message: 'Official not found' });
       }
 
-      // Update only the provided fields in Redis
-      if (fullname) await client.hSet(`official:${officialId}`, 'fullname', fullname);
-      if (position) await client.hSet(`official:${officialId}`, 'position', position);
-      if (phone) await client.hSet(`official:${officialId}`, 'phone', phone);
+      // Update text fields
+      if (fullname) await client.hSet(`official:${officialId}`, 'fullname', String(fullname));
+      if (position) await client.hSet(`official:${officialId}`, 'position', String(position));
+      if (phone) await client.hSet(`official:${officialId}`, 'phone', String(phone));
+
+      // Update profile photo if a new one is uploaded
       if (profilePhoto) {
           await client.hSet(`official:${officialId}`, 'profilePhoto', profilePhoto);
-      } else {
-          await client.hSet(`official:${officialId}`, 'profilePhoto', 'uploads/default-profile.png');
       }
 
       res.status(200).json({ message: 'Official updated successfully' });

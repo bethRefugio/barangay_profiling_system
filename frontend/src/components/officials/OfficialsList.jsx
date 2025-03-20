@@ -73,11 +73,23 @@ const OfficialsList = () => {
     const handleEditOfficial = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`${API_URL}/${selectedOfficialId}`, {
-                fullname: newOfficial.fullname,
-                position: newOfficial.position,
-                phone: newOfficial.phone,
-                profilePhoto: newOfficial.profilePhoto || "uploads/default-profile.png"
+            const formData = new FormData();
+            formData.append('fullname', newOfficial.fullname);
+            formData.append('position', newOfficial.position);
+            formData.append('phone', newOfficial.phone);
+    
+            // Check if a new profile photo was selected
+            if (newOfficial.profilePhoto instanceof File) {
+                formData.append('profilePhoto', newOfficial.profilePhoto);
+            }
+    
+            // Debug: Log what is being sent
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+    
+            const response = await axios.put(`${API_URL}/${selectedOfficialId}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
     
             toast.success('Official updated successfully!');
@@ -89,13 +101,14 @@ const OfficialsList = () => {
                 phone: "",
                 profilePhoto: null
             });
+    
         } catch (error) {
             console.error("Error editing official:", error);
             toast.error('Error editing official!');
         }
     };
-    
-    
+     
+       
     
 
     const handleDeleteClick = (officialId) => {
@@ -362,7 +375,7 @@ const OfficialsList = () => {
                     >
                         {/* Profile Photo Centered at the Top */}
                         <img
-                            src={`http://localhost:5000/${item.profilePhoto ? item.profilePhoto.replace(/^uploads\//, '') : 'uploads/default-profile.png'}`}
+                            src={`http://localhost:5000/${item.profilePhoto}`}
                             alt="Official's Photo"
                             className='w-28 h-28 object-cover rounded-full border border-gray-500 mb-3'
                             onError={(e) => { e.target.src = 'http://localhost:5000/uploads/default-profile.png'; }} 
