@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from "framer-motion";
-import { Edit, Search, Trash2, UserRoundPlus, Download, Import } from "lucide-react";
+import { Edit, Search, Trash2, UserRoundPlus, Download, Import, ListCollapse, X } from "lucide-react";
 import axios from "axios";
 import Papa from "papaparse"; 
 import AddResidentForm from './AddResidentForm';
@@ -13,6 +13,7 @@ const API_URL = 'http://localhost:5000/resident';
 
 const ResidentsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    const [searchColumn, setSearchColumn] = useState("");
     const [residents, setResidents] = useState([]);
     const [filteredResidents, setFilteredResidents] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -38,8 +39,10 @@ const ResidentsTable = () => {
         educational_level: ""
     });
     const [csvResidents, setCsvResidents] = useState([]); // State for CSV content
-    const [showCsvModal, setShowCsvModal] = useState(false); // Modal for CSV actions
     const [accountType, setAccountType] = useState(null);
+    const [showDetails, setShowDetails] = useState(false); // State to toggle the pop-out form
+    const [selectedResident, setSelectedResident] = useState(null); // State to store the selected resident details
+
 
     const fetchResidents = useCallback(async () => {
         try {
@@ -79,16 +82,35 @@ const ResidentsTable = () => {
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
         setSearchTerm(term);
-        const filtered = residents.filter((resident) =>
-            Object.entries(resident).some(([key, value]) => {
-                if (key === "gender") {
-                    return value.toLowerCase() === term; // Exact match for gender
-                }
-                return value.toString().toLowerCase().includes(term);
-            })
-        );
+
+        if (term.trim() === "") {
+            setFilteredResidents(residents);
+            return;
+        }
+    
+        if (!searchColumn) {
+            // If no column is selected, do not filter
+            setFilteredResidents(residents);
+            return;
+        }
+    
+        const filtered = residents.filter((resident) => {
+            const value = resident[searchColumn];
+    
+            // Handle exact match for gender
+            if (searchColumn === "gender") {
+                return value && value.toLowerCase() === term;
+            }
+    
+            // Handle partial match for other fields
+            return value && value.toString().toLowerCase().includes(term);
+        });
     
         setFilteredResidents(filtered);
+    };
+
+    const handleColumnChange = (e) => {
+        setSearchColumn(e.target.value); // Update the selected column
     };
 
     const handleInputChange = (e) => {
@@ -241,6 +263,16 @@ const ResidentsTable = () => {
         toast.info("CSV upload canceled. Original data restored.");
     };
 
+    const handleViewDetails = (resident) => {
+        setSelectedResident(resident); // Set the selected resident
+        setShowDetails(true); // Show the pop-out form
+    };
+
+    const handleCloseDetails = () => {
+        setShowDetails(false); // Hide the pop-out form
+        setSelectedResident(null); // Clear the selected resident
+    };
+
     return (
         <motion.div
             className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8'
@@ -253,7 +285,23 @@ const ResidentsTable = () => {
                 <h2 className='text-xl font-semibold text-gray-100'>Resident List</h2>
 
                 <div className='absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-4'>
+                    {/* Dropdown for Column Selection */}
+                    <select
+                        className='bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        value={searchColumn}
+                        onChange={handleColumnChange}
+                    >
+                        <option value="" disabled>
+                            Sort By
+                        </option>
+                        <option value="fullname">Full Name</option>
+                        <option value="age">Age</option>
+                        <option value="purok">Purok</option>
+                        <option value="gender">Gender</option>
+                        <option value="civil_status">Civil Status</option>
+                    </select>
 
+                    {/* Search Input */}
                     <div className='relative flex items-center w-[350px]'>
                         <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
                         <input
@@ -265,6 +313,7 @@ const ResidentsTable = () => {
                             value={searchTerm}
                         />
                     </div>
+                
 
                                    
 
@@ -297,22 +346,27 @@ const ResidentsTable = () => {
 
                     )}
 
-                    <button
-                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
-                        onClick={() => document.getElementById('csvUploadInput').click()} // Trigger file input click
-                    >
-                        <Import size={16} className='mr-2' />
-                        Import data
-                    </button>
-                    <input
-                        id='csvUploadInput'
-                        type='file'
-                        accept='.csv'
-                        onChange={handleCsvUpload}
-                        className='hidden' // Hide the file input
-                    />
+                    {(accountType === "admin" || accountType === "barangay captain") && (
+                        <div className='relative'>
+                            <button
+                                className='bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600 
+                                    focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
+                                onClick={() => document.getElementById('csvUploadInput').click()} // Trigger file input click
+                            >
+                                <Import size={16} className='mr-2' />
+                                Import data
+                            </button>
+                            <input
+                                id='csvUploadInput'
+                                type='file'
+                                accept='.csv'
+                                onChange={handleCsvUpload}
+                                className='hidden' // Hide the file input
+                            />
+                        </div>
+                    )}
                 </div>
+                
                 <button
                     className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
                         focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
@@ -367,7 +421,7 @@ const ResidentsTable = () => {
             )}
 
 
-            <div className='overflow-x-auto'>
+           <div className='overflow-x-auto'>
                 <table className='min-w-full divide-y divide-gray-700'>
                     <thead>
                         <tr>
@@ -384,33 +438,9 @@ const ResidentsTable = () => {
                                 Gender
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Birthdate
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Email
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Phone
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Civil Status
                             </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                PWD
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Registered Voter
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Employment Status
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Income Source
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Educational Level
-                            </th>
-                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (
+                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
                                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                     Actions
                                 </th>
@@ -439,34 +469,24 @@ const ResidentsTable = () => {
                                     {resident.gender}
                                 </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.birthdate}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.email}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.phone}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     {resident.civil_status}
                                 </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.is_pwd}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.is_aVoter}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.employment_status}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.income_source}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.educational_level}
-                                </td>
-                                {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (
+                                {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
                                     <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                        <button
+                                            className='text-blue-400 hover:text-blue-300 mr-2'
+                                            onClick={() => handleViewDetails(resident)}
+                                        >
+                                            <ListCollapse size={18} />
+                                        </button>
+                                        {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (
+                                        <button
+                                            className='text-indigo-400 hover:text-indigo-300 mr-2'
+                                            onClick={() => handleEditClick(resident)}
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        )}
                                         {(accountType === "admin" || accountType === "barangay captain") && (
                                             <button
                                                 className='text-red-400 hover:text-red-300 mr-2'
@@ -475,20 +495,71 @@ const ResidentsTable = () => {
                                                 <Trash2 size={18} />
                                             </button>
                                         )}
-                                        <button
-                                            className='text-indigo-400 hover:text-indigo-300'
-                                            onClick={() => handleEditClick(resident)}
-                                        >
-                                            <Edit size={18} />
-                                        </button>
                                     </td>
                                 )}
                             </motion.tr>
                         ))}
                     </tbody>
                 </table>
-                
             </div>
+
+            {/* Pop-out Form for Resident Details */}
+            {showDetails && selectedResident && (
+                <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+                    <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-1/2'>
+                        <div className='flex justify-between items-center mb-4'>
+                            <h2 className='text-xl font-semibold text-gray-100'>Resident Details</h2>
+                            <button
+                                className='text-gray-400 hover:text-gray-300'
+                                onClick={handleCloseDetails}
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className='grid grid-cols-2 gap-4'>
+                            <p className='text-gray-400'>
+                                <strong>Full Name:</strong> <span className='text-gray-200'>{selectedResident.fullname}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Age:</strong> <span className='text-gray-200'>{selectedResident.age}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Purok:</strong> <span className='text-gray-200'>{selectedResident.purok}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Gender:</strong> <span className='text-gray-200'>{selectedResident.gender}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Birthdate:</strong> <span className='text-gray-200'>{selectedResident.birthdate}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Email:</strong> <span className='text-gray-200'>{selectedResident.email}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Phone:</strong> <span className='text-gray-200'>{selectedResident.phone}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Civil Status:</strong> <span className='text-gray-200'>{selectedResident.civil_status}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>PWD:</strong> <span className='text-gray-200'>{selectedResident.is_pwd}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Registered Voter:</strong> <span className='text-gray-200'>{selectedResident.is_aVoter}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Employment Status:</strong> <span className='text-gray-200'>{selectedResident.employment_status}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Income Source:</strong> <span className='text-gray-200'>{selectedResident.income_source}</span>
+                            </p>
+                            <p className='text-gray-400'>
+                                <strong>Educational Level:</strong> <span className='text-gray-200'>{selectedResident.educational_level}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className='flex justify-between items-center mb-4 mt-6'>
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
