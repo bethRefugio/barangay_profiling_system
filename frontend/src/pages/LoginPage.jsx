@@ -42,7 +42,7 @@ const LoginPage = () => {
 
     return (
         <div className="container-login relative h-full w-full flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: 'url(/logo_enhanced.png)' }}>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-gray-800"></div>
+            <div className="absolute inset-0 bg-gray-700 bg-opacity-70"></div>
             <div className="relative z-10 bg-gray-800 p-6 rounded-lg shadow-md">
                 <style>
                     {`

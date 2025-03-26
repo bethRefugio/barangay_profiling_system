@@ -307,15 +307,25 @@ const OfficialsList = () => {
                         </div>
                         <div className='flex flex-col'>
                             <label className='text-sm mb-1'>Position</label>
-                            <input
-                                type='text'
+                            <select
                                 name='position'
-                                placeholder='e.g., Kagawad'
-                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 w-70 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
                                 value={newOfficial.position}
                                 onChange={handleInputChange}
                                 required
-                            />
+                            >
+                                <option value='' disabled>Select Position</option>
+                                <option value="Barangay Captain">Barangay Captain</option>
+                                <option value="Kagawad">Barangay Councilor (Kagawad)</option>
+                                <option value="SK Chairperson">Sangguniang Kabataan (SK) Chairperson</option>
+                                <option value="Barangay Secretary">Barangay Secretary</option>
+                                <option value="Barangay Treasure">Barangay Treasurer</option>
+                                <option value="Barangay Tanod">Barangay Tanod (Peace and Order Officer)</option>
+                                <option value="Barangay Health Worker(BHW)">Barangay Health Worker (BHW)</option>
+                                <option value="Barangay Nutrition Scholar (BNS)">Barangay Nutrition Scholar (BNS)</option>
+                                <option value="Lupon Member">Barangay Lupon Member</option>
+                                <option value="BDRRMC Member">Barangay Disaster Risk Reduction and Management Council (BDRRMC) Member</option>
+                            </select>
                         </div>
                         <div className='flex flex-col'>
                             <label className='text-sm mb-1'>Phone</label>

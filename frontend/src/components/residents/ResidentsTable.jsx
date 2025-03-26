@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from "framer-motion";
-import { Edit, Search, Trash2, UserRoundPlus, Download } from "lucide-react";
+import { Edit, Search, Trash2, UserRoundPlus, Download, Import } from "lucide-react";
 import axios from "axios";
+import Papa from "papaparse"; 
 import AddResidentForm from './AddResidentForm';
 import EditResidentForm from './EditResidentForm';
 import DeleteResidentConfirmation from './DeleteResidentConfirmation';
@@ -36,6 +37,8 @@ const ResidentsTable = () => {
         income_source: "",
         educational_level: ""
     });
+    const [csvResidents, setCsvResidents] = useState([]); // State for CSV content
+    const [showCsvModal, setShowCsvModal] = useState(false); // Modal for CSV actions
     const [accountType, setAccountType] = useState(null);
 
     const fetchResidents = useCallback(async () => {
@@ -198,6 +201,46 @@ const ResidentsTable = () => {
         toast.success("CSV file downloaded successfully!");
     };
 
+    const handleCsvUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+                setCsvResidents(results.data);
+                setFilteredResidents(results.data);
+                toast.info("CSV content loaded into the table. Click 'Save' to save to the database or 'Cancel' to discard.");
+       
+            },
+            error: (error) => {
+                console.error("Error parsing CSV:", error);
+                toast.error("Failed to parse CSV file.");
+            },
+        });
+    };
+
+    const saveCsvToDatabase = async () => {
+        try {
+            for (const resident of csvResidents) {
+                await axios.post(API_URL, resident);
+            }
+            toast.success("CSV content saved to the database!");
+            fetchResidents();
+            setCsvResidents([]);
+        } catch (error) {
+            console.error("Error saving CSV content:", error);
+            toast.error("Failed to save CSV content to the database.");
+        }
+    };
+
+    const cancelCsvUpload = () => {
+        setCsvResidents([]); // Clear CSV data
+        fetchResidents(); // Restore the original table content
+        toast.info("CSV upload canceled. Original data restored.");
+    };
+
     return (
         <motion.div
             className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8'
@@ -223,6 +266,9 @@ const ResidentsTable = () => {
                         />
                     </div>
 
+                                   
+
+                    {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
                     <button
                         className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
                             focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
@@ -248,6 +294,24 @@ const ResidentsTable = () => {
                     >
                         <UserRoundPlus size={18} />
                     </button>
+
+                    )}
+
+                    <button
+                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
+                        onClick={() => document.getElementById('csvUploadInput').click()} // Trigger file input click
+                    >
+                        <Import size={16} className='mr-2' />
+                        Import data
+                    </button>
+                    <input
+                        id='csvUploadInput'
+                        type='file'
+                        accept='.csv'
+                        onChange={handleCsvUpload}
+                        className='hidden' // Hide the file input
+                    />
                 </div>
                 <button
                     className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
@@ -256,6 +320,24 @@ const ResidentsTable = () => {
                 >
                     <Download size={18} className='mr-2' /> Download
                 </button>
+
+                {/* Conditionally render Save and Cancel buttons if CSV content is loaded */}
+                {csvResidents.length > 0 && (
+                    <div className='flex space-x-4'>
+                        <button
+                            className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
+                            onClick={saveCsvToDatabase}
+                        >
+                            Save to Database
+                        </button>
+                        <button
+                            className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
+                            onClick={cancelCsvUpload}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
             </div>
 
 
@@ -283,6 +365,7 @@ const ResidentsTable = () => {
                     setShowDeleteConfirmation={setShowDeleteConfirmation}
                 />
             )}
+
 
             <div className='overflow-x-auto'>
                 <table className='min-w-full divide-y divide-gray-700'>

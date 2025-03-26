@@ -154,7 +154,7 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                     >
                         <option value='' disabled>Select Voter Status</option>
                         <option value='Yes'>Yes</option>
-                        <option value='Np'>No</option>
+                        <option value='No'>No</option>
                     </select>
                 </div>
                 <div className='flex flex-col'>

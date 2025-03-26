@@ -124,7 +124,9 @@ const Profile = () => {
 
             {editMode ? (
                 <form onSubmit={handleEditProfile}>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-2'>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Full Name</label>
                         <input
                             type='text'
                             name='name'
@@ -134,6 +136,9 @@ const Profile = () => {
                             onChange={handleInputChange}
                             required
                         />
+                    </div>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Email</label>
                         <input
                             type='email'
                             name='email'
@@ -143,6 +148,9 @@ const Profile = () => {
                             onChange={handleInputChange}
                             required
                         />
+                    </div>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Password</label>
                         <div className='relative'>
                             <input
                                 type={showPassword ? 'text' : 'password'}
@@ -160,6 +168,8 @@ const Profile = () => {
                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
+                    </div>
+                    
                         <div className='col-span-2'>
                             <label className='block text-gray-400 mb-2'>Profile Photo</label>
                             <input

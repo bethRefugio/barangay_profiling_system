@@ -58,19 +58,16 @@ const OverviewPage = () => {
 
                     <motion.div
                         className='w-2/3 ml-4'
+                        style={{ height: "500px" }}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <img src='/maps.png' alt='Description of image' className='rounded-xl shadow-lg mt-3' />
+                       <BunawanMap />
                     </motion.div>
                 </div>
 
-                {/* CHARTS */}
-                <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
-                    {/* <BunawanMap /> */}
-                     {/*  <SalesChannelChart />*/}
-                </div>
+                
             </main>
         </div>
     );
