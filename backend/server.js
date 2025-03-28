@@ -504,6 +504,201 @@ app.delete('/official/:officialId', async (req, res) => {
 });
 
 
+// Route to save request data
+app.post('/request', async (req, res) => {
+  const { name, age, address, documentType, purpose, userId } = req.body;
+  console.log("Incoming request data:", req.body);
+
+  if (!name || !age || !address || !documentType || !purpose || !userId) {
+      return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+      const requestId = await client.incr('requestIdCounter');
+      const dateOfRequest = new Date().toISOString(); // Automatically set the current date and time
+      const status = "Pending"; // Default status
+
+      const requestData = { name, age, address, documentType, purpose, dateOfRequest, status, userId };
+
+      await client.hSet(`request:${requestId}`, 'name', requestData.name);
+      await client.hSet(`request:${requestId}`, 'age', requestData.age);
+      await client.hSet(`request:${requestId}`, 'address', requestData.address);
+      await client.hSet(`request:${requestId}`, 'documentType', requestData.documentType);
+      await client.hSet(`request:${requestId}`, 'purpose', requestData.purpose);
+      await client.hSet(`request:${requestId}`, 'dateOfRequest', requestData.dateOfRequest);  
+      await client.hSet(`request:${requestId}`, 'status', requestData.status);
+      await client.hSet(`request:${requestId}`, 'userId', requestData.userId);
+
+      res.status(201).json({ message: 'Request saved successfully', requestId });
+  } catch (error) {
+      console.error('Error saving request:', error);
+      res.status(500).json({ message: 'Failed to save request' });
+  }
+});
+
+// Route to fetch requests for a specific user
+app.get('/request/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+      const keys = await client.keys('request:*');
+      const requests = await Promise.all(
+          keys.map(async (key) => {
+              const request = await client.hGetAll(key);
+              if (request.userId === userId) {
+                  return { id: key.split(':')[1], ...request };
+              }
+              return null;
+          })
+      );
+
+      res.json(requests.filter((request) => request !== null));
+  } catch (error) {
+      console.error('Error fetching user requests:', error);
+      res.status(500).json({ message: 'Failed to fetch user requests' });
+  }
+});
+
+// Route to fetch all requests
+app.get('/request', async (req, res) => {
+  try {
+      const keys = await client.keys('request:*');
+      const requests = await Promise.all(
+          keys.map(async (key) => {
+              const request = await client.hGetAll(key);
+              return { id: key.split(':')[1], ...request };
+          })
+      );
+      res.json(requests);
+  } catch (error) {
+      console.error('Error fetching requests:', error);
+      res.status(500).json({ message: 'Failed to fetch requests' });
+  }
+});
+
+// Update request
+app.put('/request/:requestId', async (req, res) => {
+  const requestId = req.params.requestId;
+  const { name, address, documentType, purpose, status } = req.body;
+
+  try {
+      const existingRequest = await client.hGetAll(`request:${requestId}`);
+      if (!existingRequest) {
+          return res.status(404).json({ message: "Request not found" });
+      }
+
+      if (name) await client.hSet(`request:${requestId}`, "name", name);
+      if (address) await client.hSet(`request:${requestId}`, "address", address);
+      if (documentType) await client.hSet(`request:${requestId}`, "documentType", documentType);
+      if (purpose) await client.hSet(`request:${requestId}`, "purpose", purpose);
+      if (status) await client.hSet(`request:${requestId}`, "status", status);
+
+      res.status(200).json({ message: "Request updated successfully" });
+  } catch (error) {
+      console.error("Error updating request:", error);
+      res.status(500).json({ message: "Failed to update request" });
+  }
+});
+
+// Route to generate the next O.R. number
+app.get('/generate-or-number', async (req, res) => {
+  try {
+      const currentYear = new Date().getFullYear(); // Get the current year
+      const key = `orNumber:${currentYear}`; // Redis key for the current year's O.R. numbers
+
+      // Increment the counter for the current year
+      const counter = await client.incr(key);
+
+      // Format the O.R. number as "2025-B-00001"
+      const orNumber = `${currentYear}-B-${String(counter).padStart(5, '1')}`;
+
+      res.status(200).json({ orNumber });
+  } catch (error) {
+      console.error('Error generating O.R. number:', error);
+      res.status(500).json({ message: 'Failed to generate O.R. number' });
+  }
+});
+
+app.post('/announcements', async (req, res) => {
+  const { title, content, time, date, place } = req.body;
+
+  if (!title || !content) {
+      return res.status(400).json({ message: 'Title and content are required' });
+  }
+
+  try {
+      // Auto-increment the announcementId
+      const announcementId = await client.incr('announcementIdCounter');
+      const announcementData = { title, content, time, date, place };
+
+      // Save the announcement data in Redis
+      await client.hSet(`announcement:${announcementId}`, 'title', announcementData.title);
+      await client.hSet(`announcement:${announcementId}`, 'content', announcementData.content);
+      await client.hSet(`announcement:${announcementId}`, 'time', announcementData.time);
+      await client.hSet(`announcement:${announcementId}`, 'date', announcementData.date);
+      await client.hSet(`announcement:${announcementId}`, 'place', announcementData.place);
+
+      res.status(201).json({ id: announcementId, ...announcementData });
+  } catch (error) {
+      console.error('Error saving announcement:', error);
+      res.status(500).json({ message: 'Failed to save announcement' });
+  }
+});
+
+// Fetch all announcements
+app.get('/announcements', async (req, res) => {
+  try {
+      const keys = await client.keys('announcement:*');
+      const announcements = await Promise.all(
+          keys.map(async (key) => {
+              const announcement = await client.hGetAll(key);
+              return { id: key.split(':')[1], ...announcement };
+          })
+      );
+      res.json(announcements);
+  } catch (error) {
+      console.error('Error fetching announcements:', error);
+      res.status(500).json({ message: 'Failed to fetch announcements' });
+  }
+});
+
+// Update announcement
+app.put('/announcements/:id', async (req, res) => {
+  const id = req.params.id;
+  const { title, content, time, date, place } = req.body;
+
+  try {
+      const existingAnnouncement = await client.hGetAll(`announcement:${id}`);
+      if (!existingAnnouncement) {
+          return res.status(404).json({ message: 'Announcement not found' });
+      }
+
+      if (title) await client.hSet(`announcement:${id}`, 'title', title);
+      if (content) await client.hSet(`announcement:${id}`, 'content', content);
+      if (time) await client.hSet(`announcement:${id}`, 'time', time);
+      if (date) await client.hSet(`announcement:${id}`, 'date', date);
+      if (place) await client.hSet(`announcement:${id}`, 'place', place);
+
+      const updatedAnnouncement = await client.hGetAll(`announcement:${id}`);
+      res.status(200).json({ id, ...updatedAnnouncement });
+  } catch (error) {
+      console.error('Error updating announcement:', error);
+      res.status(500).json({ message: 'Failed to update announcement' });
+  }
+});
+
+// Delete announcement
+app.delete('/announcements/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+      await client.del(`announcement:${id}`);
+      res.status(200).json({ message: 'Announcement deleted successfully' });
+  } catch (error) {
+      console.error('Error deleting announcement:', error);
+      res.status(500).json({ message: 'Failed to delete announcement' });
+  }
+});
+
 app._router.stack.forEach((middleware) => {
   if (middleware.route) { // If middleware has a route
       console.log(`✅ Registered Route: ${middleware.route.path}`);

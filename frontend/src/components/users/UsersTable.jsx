@@ -281,6 +281,7 @@ const UsersTable = () => {
                             required
                         >
                             <option value="" disabled>Select Role</option>
+                            <option value="Guest">Guest</option>
                             <option value="Resident">Resident</option>
                             <option value="Staff">Staff</option>
                             <option value="Barangay Captain">Barangay Captain</option>
@@ -370,6 +371,7 @@ const UsersTable = () => {
                                 required
                             >
                                 <option value="" disabled>Select Role</option>
+                                <option value="Guest">Guest</option>
                                 <option value="Resident">Resident</option>
                                 <option value="Staff">Staff</option>
                                 <option value="Barangay Captain">Barangay Captain</option>

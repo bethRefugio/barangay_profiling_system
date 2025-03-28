@@ -5,13 +5,17 @@ import OverviewPage from "./pages/OverviewPage";
 import ResidentsPage from "./pages/ResidentsPage";
 import UsersPage from "./pages/UsersPage";
 import DemographicsPage from "./pages/DemographicsPage";
-import HouseholdPage from "./pages/HouseholdPage";
 import OfficialsPage from "./pages/OfficialsPage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import RequestPage from "./pages/RequestPage";
+import ManageRequestPage from "./pages/ManageRequestPage";
+import ProjectsPage from "./pages/ProjectsPage";
+import AnnouncementsPage from "./pages/AnnouncementsPage";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
     const location = useLocation();
@@ -36,14 +40,17 @@ function App() {
                     <Route path='/' element={<Navigate to="/overview" />} />
                     <Route path='/overview' element={<OverviewPage />} />
                     <Route path='/residents' element={<ResidentsPage userId={userId} />} />
+                    <Route path='/request' element={<RequestPage />} />
+                    <Route path='/manage_request' element={<ManageRequestPage />} />
                     <Route path='/users' element={<UsersPage />} />
                     <Route path='/statistics' element={<DemographicsPage />} />
-                    <Route path='/household' element={<HouseholdPage />} />
                     <Route path='/officials' element={<OfficialsPage />} />
                     <Route path='/settings' element={<SettingsPage />} />
+                    <Route path='/projects' element={<ProjectsPage />} />
+                    <Route path='/announcements' element={<AnnouncementsPage />} />
                 </Routes>
             </div>
-            <ToastContainer />
+           
         </div>
     );
 }

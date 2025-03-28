@@ -281,117 +281,142 @@ const ResidentsTable = () => {
             transition={{ delay: 0.2 }}
         >
             <ToastContainer />
-            <div className='relative flex items-center justify-between mb-6'>
-                <h2 className='text-xl font-semibold text-gray-100'>Resident List</h2>
+            <div className='relative flex flex-col items-center mb-6'>
+    {/* Title and Download Button */}
+    <div className='flex justify-between items-center w-full'>
+        <h2 className='text-xl font-semibold text-gray-100'>Resident List</h2>
+        {(accountType === "admin" || accountType === "barangay captain") && (
+            
+        <button
+            className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
+                focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
+            onClick={downloadCSV}
+        >
+            <Download size={18} className='mr-2' /> Download
+        </button>
+        )}
+    </div>
 
-                <div className='absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-4'>
-                    {/* Dropdown for Column Selection */}
-                    <select
-                        className='bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                        value={searchColumn}
-                        onChange={handleColumnChange}
-                    >
-                        <option value="" disabled>
-                            Sort By
-                        </option>
-                        <option value="fullname">Full Name</option>
-                        <option value="age">Age</option>
-                        <option value="purok">Purok</option>
-                        <option value="gender">Gender</option>
-                        <option value="civil_status">Civil Status</option>
-                    </select>
+    {/* Controls Section */}
+    <div className='flex flex-wrap justify-center items-center space-x-4 mt-4'>
+        {/* Dropdown for Column Selection */}
+<div className='relative'>
+    <select
+        className='bg-gray-700 text-white rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none'
+        value={searchColumn}
+        onChange={handleColumnChange}
+    >
+        <option value="" disabled>
+            Sort By
+        </option>
+        <option value="fullname">Full Name</option>
+        <option value="age">Age</option>
+        <option value="purok">Purok</option>
+        <option value="gender">Gender</option>
+        <option value="civil_status">Civil Status</option>
+        <option value="birthdate">Birthdate</option>
+        <option value="email">Email</option>
+        <option value="phone">Phone Number</option>
+        <option value="is_pwd">PWD</option>
+        <option value="is_aVoter">Registered Voter</option>
+        <option value="employment_status">Employment Status</option>
+        <option value="income_source">Income Source</option>
+        <option value="educational_level">Educational Level</option>
+    </select>
+    {/* Custom Dropdown Icon */}
+    <div className='absolute inset-y-0 right-2 flex items-center pointer-events-none'>
+        <svg
+            className='w-4 h-4 text-gray-400'
+            xmlns='http://www.w3.org/2000/svg'
+            fill='none'
+            viewBox='0 0 24 24'
+            stroke='currentColor'
+        >
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+    </div>
+</div>
+        {/* Search Input */}
+        <div className='relative flex items-center w-[350px]'>
+            <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
+            <input
+                type='text'
+                placeholder='Search residents...'
+                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-12 pr-6 py-2 w-full 
+                    focus:outline-none focus:ring-2 focus:ring-blue-500'
+                onChange={handleSearch}
+                value={searchTerm}
+            />
+        </div>
 
-                    {/* Search Input */}
-                    <div className='relative flex items-center w-[350px]'>
-                        <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
-                        <input
-                            type='text'
-                            placeholder='Search residents...'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-12 pr-6 py-2 w-full 
-                                focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            onChange={handleSearch}
-                            value={searchTerm}
-                        />
-                    </div>
-                
+        {/* Add Icon Button */}
+        {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
+            <button
+                className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
+                onClick={() => {
+                    setShowAddForm(true);
+                    setShowEditForm(false);
+                    setNewResident({
+                        fullname: "",
+                        age: "",
+                        purok: "",
+                        gender: "",
+                        birthdate: "",
+                        email: "",
+                        phone: "",
+                        civil_status: "",
+                        is_pwd: "",
+                        is_aVoter: "",
+                        employment_status: "",
+                        income_source: "",
+                        educational_level: ""
+                    });
+                }}
+            >
+                <UserRoundPlus size={18} />
+            </button>
+        )}
 
-                                   
+        {/* Import Data Button */}
+        {(accountType === "admin" || accountType === "barangay captain") && (
+            <div className='relative'>
+                <button
+                    className='bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600 
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
+                    onClick={() => document.getElementById('csvUploadInput').click()} // Trigger file input click
+                >
+                    <Import size={16} className='mr-2' />
+                    Import data
+                </button>
+                <input
+                    id='csvUploadInput'
+                    type='file'
+                    accept='.csv'
+                    onChange={handleCsvUpload}
+                    className='hidden' // Hide the file input
+                />
+            </div>
+        )}
 
-                    {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
-                    <button
-                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
-                        onClick={() => {
-                            setShowAddForm(true);
-                            setShowEditForm(false);
-                            setNewResident({
-                                fullname: "",
-                                age: "",
-                                purok: "",
-                                gender: "",
-                                birthdate: "",
-                                email: "",
-                                phone: "",
-                                civil_status: "",
-                                is_pwd: "",
-                                is_aVoter: "",
-                                employment_status: "",
-                                income_source: "",
-                                educational_level: ""
-                            });
-                        }}
-                    >
-                        <UserRoundPlus size={18} />
-                    </button>
-
-                    )}
-
-                    {(accountType === "admin" || accountType === "barangay captain") && (
-                        <div className='relative'>
+                    {/* Save and Cancel Buttons */}
+                    {csvResidents.length > 0 && (
+                        <div className='flex space-x-4'>
                             <button
-                                className='bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600 
-                                    focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
-                                onClick={() => document.getElementById('csvUploadInput').click()} // Trigger file input click
+                                className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                onClick={saveCsvToDatabase}
                             >
-                                <Import size={16} className='mr-2' />
-                                Import data
+                                Save to Database
                             </button>
-                            <input
-                                id='csvUploadInput'
-                                type='file'
-                                accept='.csv'
-                                onChange={handleCsvUpload}
-                                className='hidden' // Hide the file input
-                            />
+                            <button
+                                className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
+                                onClick={cancelCsvUpload}
+                            >
+                                Cancel
+                            </button>
                         </div>
                     )}
                 </div>
-                
-                <button
-                    className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
-                        focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
-                    onClick={downloadCSV}
-                >
-                    <Download size={18} className='mr-2' /> Download
-                </button>
-
-                {/* Conditionally render Save and Cancel buttons if CSV content is loaded */}
-                {csvResidents.length > 0 && (
-                    <div className='flex space-x-4'>
-                        <button
-                            className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
-                            onClick={saveCsvToDatabase}
-                        >
-                            Save to Database
-                        </button>
-                        <button
-                            className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
-                            onClick={cancelCsvUpload}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                )}
             </div>
 
 
@@ -440,7 +465,7 @@ const ResidentsTable = () => {
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Civil Status
                             </th>
-                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
+                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident" || accountType === "guest") && (
                                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                     Actions
                                 </th>
@@ -471,7 +496,7 @@ const ResidentsTable = () => {
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     {resident.civil_status}
                                 </td>
-                                {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
+                                {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident" || accountType === "guest") && (
                                     <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                         <button
                                             className='text-blue-400 hover:text-blue-300 mr-2'
@@ -506,8 +531,8 @@ const ResidentsTable = () => {
             {/* Pop-out Form for Resident Details */}
             {showDetails && selectedResident && (
                 <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-                    <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-1/2'>
-                        <div className='flex justify-between items-center mb-4'>
+                    <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-3/4'>
+                        <div className='flex justify-between items-center mb-6'>
                             <h2 className='text-xl font-semibold text-gray-100'>Resident Details</h2>
                             <button
                                 className='text-gray-400 hover:text-gray-300'

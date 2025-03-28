@@ -1,4 +1,4 @@
-import { BarChart2, House, Menu, Settings, ChartNoAxesCombined, ClipboardList, Users, ContactRound } from "lucide-react";
+import { BarChart2, FileText, Megaphone, LayoutDashboard, Menu, Settings, ChartNoAxesCombined, ClipboardList, Users, ContactRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -11,11 +11,14 @@ const SIDEBAR_ITEMS = [
         color: "#6366f1",
         href: "/",
     },
-    { name: "Residents", icon: ContactRound, color: "#8B5CF6", href: "/residents" },
-    //{ name: "Household", icon: House, color: "#F59E0B", href: "/household" },   
-    { name: "Demographics", icon: ChartNoAxesCombined, color: "#10B981", href: "/statistics" },
+    { name: "Residents", icon: ContactRound, color: "#8B5CF6", href: "/residents", roles: ["admin", "barangay captain", "staff"] },
+    { name: "Request Document", icon: FileText, color: "#F59E0B", href: "/request", roles: ["resident",]  },
+    { name: "Requested Document", icon: FileText, color: "#F59E0B", href: "/manage_request", roles: ["admin", "barangay captain", "staff"]  },   
+    { name: "Demographics", icon: ChartNoAxesCombined, color: "#10B981", href: "/statistics", roles: ["admin", "barangay captain", "staff"] },
     { name: "Users", icon: Users, color: "#EC4899", href: "/users", roles: ["admin", "barangay captain"] },
     { name: "Officials", icon: ClipboardList, color: "#3B82F6", href: "/officials" },
+    { name: "Announcements", icon: Megaphone, color: "#FF0000", href: "/announcements", roles: ["resident", "admin", "barangay captain", "staff"]  },
+    { name: "Projects", icon: LayoutDashboard, color: "#3B82F6", href: "/projects" },
     { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/settings" },
 ];
 
@@ -76,7 +79,7 @@ const Sidebar = () => {
                             src="/logo_enhanced final.png" // Replace with the actual path to your logo
                             alt='Logo'
                             className='mt-1 mb-2 mx-auto'
-                            style={{ width: '130px', height: '130px', marginBottom: '0px' }} // Adjust the size and margin as needed
+                            style={{ width: '120px', height: '120px', marginBottom: '0px' }} // Adjust the size and margin as needed
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -88,7 +91,7 @@ const Sidebar = () => {
                 <nav className='mt-8 flex-grow'>
                     {filteredItems.map((item) => (
                         <Link key={item.href} to={item.href}>
-                            <motion.div className='flex items-center p-4 text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors mb-2'>
+                            <motion.div className='flex items-center p-4 text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors mb-1'>
                                 <item.icon size={20} style={{ color: item.color, minWidth: "20px" }} />
                                 <AnimatePresence>
                                     {isSidebarOpen && (

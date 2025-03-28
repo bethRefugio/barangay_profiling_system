@@ -10,6 +10,8 @@ import AgeDistribution from "../components/statistics/AgeDistribution";
 import GenderDistribution from "../components/statistics/GenderDistribution";
 import CivilStatusDistribution from "../components/statistics/CivilStatusDistribution";
 import EducationalLevelDistribution from "../components/residents/EducationLevelDistribution";
+import RegisteredVoterDistribution from "../components/statistics/RegisteredVoterDistribution";
+import PwdStatusDistribution from "../components/statistics/PwdStatusDistribution";
 
 const DemographicsPage = () => {
 	const [residents, setResidents] = useState([]);
@@ -63,6 +65,8 @@ const DemographicsPage = () => {
 					<AgeDistribution />
 					<GenderDistribution />
 					<CivilStatusDistribution />
+					<RegisteredVoterDistribution />
+					<PwdStatusDistribution />
 					
 				</div>
 				

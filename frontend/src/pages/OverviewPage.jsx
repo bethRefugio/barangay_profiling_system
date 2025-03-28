@@ -66,7 +66,20 @@ const OverviewPage = () => {
                        <BunawanMap />
                     </motion.div>
                 </div>
-
+            {/* Vision and Mission Section */}
+            <div className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mt-6'>
+                <h2 className='text-lg font-medium mb-4 text-gray-100 tracking-wider text-center'>Vision</h2>
+                <p className='text-gray-300 text-justify'>
+                    Barangay Bunawan envisions a progressive, peaceful, and environmentally sustainable community where residents thrive in a safe and inclusive environment. 
+                    We aim to foster unity, economic growth, and social development while preserving our cultural heritage and natural resources.
+                </p>
+                <h2 className='text-lg font-medium mt-6 mb-4 text-gray-100 tracking-wider text-center'>Mission</h2>
+                <p className='text-gray-300 text-justify'>
+                    Our mission is to provide transparent and efficient governance that empowers every resident of Barangay Bunawan. 
+                    We are committed to delivering quality public services, promoting sustainable livelihood programs, ensuring public safety, 
+                    and enhancing community welfare through active participation, innovation, and collaboration.
+                </p>
+            </div>
                 
             </main>
         </div>

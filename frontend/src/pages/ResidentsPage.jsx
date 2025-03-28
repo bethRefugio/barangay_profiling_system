@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { useLocation } from 'react-router-dom';
-
+import { ToastContainer } from 'react-toastify';
 import Header from "../components/common/Header";
 import StatCard from "../components/common/StatCard";
-
 import { AlertTriangle, DollarSign, ContactRound, UserCircle, BookCheck } from "lucide-react";
 import PurokDistribution from "../components/statistics/PurokDistribution";
 import SalesTrendChart from "../components/residents/SalesTrendChart";
@@ -53,6 +52,7 @@ const ResidentsPage = () => {
                     <StatCard name='Total Employed Residents' icon={BookCheck} value={totalEmployedResidents} color='#EF4444' />
                 </motion.div>
 
+          
                 <ResidentsTable />
 
                 {/* CHARTS */}
