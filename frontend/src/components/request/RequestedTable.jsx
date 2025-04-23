@@ -16,7 +16,7 @@ const RequestedTable = ({ requests, onViewDetails, onCancelRequest }) => {
         >
             <div className="overflow-x-auto">
             <div className="relative flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-100">Requested Form</h2>
+                    <h2 className="text-xl font-semibold text-gray-100">Requested Documents</h2>
                 </div>
                 <table className="min-w-full divide-y divide-gray-700">
                     <thead>

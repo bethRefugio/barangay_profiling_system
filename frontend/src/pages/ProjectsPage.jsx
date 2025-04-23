@@ -10,7 +10,7 @@ const projects = [
             "Promote health awareness campaigns on hygiene, nutrition, and disease prevention.",
             "Set up a community pharmacy with affordable medicines for residents.",
         ],
-        image: "/health and wellness.jpg", // Replace with the actual image path
+        image: "/health and wellness.jpg", 
     },
     {
         title: "Livelihood and Skills Development Program",
@@ -19,7 +19,7 @@ const projects = [
             "Partner with local businesses to provide job opportunities and apprenticeships.",
             "Provide microfinance assistance for small businesses and cooperatives.",
         ],
-        image: "/livelihood and skills.jpg", // Replace with the actual image path
+        image: "/livelihood and skills.jpg", 
     },
     {
         title: "Environmental Conservation and Clean-Up Drive",
@@ -28,7 +28,7 @@ const projects = [
             "Organize tree-planting activities to enhance green spaces and prevent soil erosion.",
             "Conduct regular barangay-wide clean-up drives to promote cleanliness and sanitation.",
         ],
-        image: "/clean-up drive.jpg", // Replace with the actual image path
+        image: "/clean-up drive.jpg", 
     },
     {
         title: "Youth and Education Development Program",
@@ -37,7 +37,7 @@ const projects = [
             "Establish a barangay library or learning hub with access to books and digital resources.",
             "Conduct leadership and skills training programs for youth empowerment.",
         ],
-        image: "/youth program.jpg", // Replace with the actual image path
+        image: "/youth program.jpg",
     },
     {
         title: "Disaster Preparedness and Response Program",
@@ -46,7 +46,7 @@ const projects = [
             "Train barangay responders in first aid, firefighting, and rescue operations.",
             "Organize disaster drills and community awareness seminars to enhance preparedness.",
         ],
-        image: "/disaster-preparedness-program.jpg", // Replace with the actual image path
+        image: "/disaster-preparedness-program.jpg", 
     },
 ];
 
