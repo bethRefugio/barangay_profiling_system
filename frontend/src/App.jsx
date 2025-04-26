@@ -13,6 +13,7 @@ import RequestPage from "./pages/RequestPage";
 import ManageRequestPage from "./pages/ManageRequestPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
+import QRPage from "./pages/QRPage";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -48,6 +49,7 @@ function App() {
                     <Route path='/settings' element={<SettingsPage />} />
                     <Route path='/projects' element={<ProjectsPage />} />
                     <Route path='/announcements' element={<AnnouncementsPage />} />
+                    <Route path='/qr_code/*' element={<QRPage />} />
                 </Routes>
             </div>
            

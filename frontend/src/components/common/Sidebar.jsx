@@ -20,6 +20,7 @@ const SIDEBAR_ITEMS = [
     { name: "Announcements", icon: Megaphone, color: "#FF0000", href: "/announcements", roles: ["resident", "admin", "barangay captain", "staff"]  },
     { name: "Projects", icon: LayoutDashboard, color: "#3B82F6", href: "/projects" },
     { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/settings" },
+    { name: "QR Scanner", icon: Settings, color: "#6EE7B7", href: "/qr_code" },
 ];
 
 const Sidebar = () => {
@@ -68,7 +69,7 @@ const Sidebar = () => {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className='p-2 rounded-full hover:bg-gray-700 transition-colors max-w-fit'
+                    className='p-1 rounded-full hover:bg-gray-700 transition-colors max-w-fit'
                 >
                     <Menu size={24} />
                 </motion.button>
@@ -91,7 +92,7 @@ const Sidebar = () => {
                 <nav className='mt-8 flex-grow'>
                     {filteredItems.map((item) => (
                         <Link key={item.href} to={item.href}>
-                            <motion.div className='flex items-center p-4 text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors mb-1'>
+                            <motion.div className='flex items-center p-3 text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors mb-0.5'>
                                 <item.icon size={20} style={{ color: item.color, minWidth: "20px" }} />
                                 <AnimatePresence>
                                     {isSidebarOpen && (

@@ -273,6 +273,16 @@ const ResidentsTable = () => {
         setSelectedResident(null); // Clear the selected resident
     };
 
+    const handleDownloadQR = (qrCode, fullname) => {
+        const link = document.createElement('a');
+        link.href = qrCode;
+        link.download = `${fullname}_QR_Code.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("QR Code downloaded successfully!");
+    };
+
     return (
         <motion.div
             className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8'
@@ -530,8 +540,9 @@ const ResidentsTable = () => {
 
             {/* Pop-out Form for Resident Details */}
             {showDetails && selectedResident && (
-                <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-                    <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-3/4'>
+                <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
+                <div className='absolute inset-0 backdrop-blur-sm'></div>
+                    <div className='relative bg-gray-800 p-6 rounded-lg shadow-lg w-3/4 z-50'>
                         <div className='flex justify-between items-center mb-6'>
                             <h2 className='text-xl font-semibold text-gray-100'>Resident Details</h2>
                             <button
@@ -581,6 +592,16 @@ const ResidentsTable = () => {
                             <p className='text-gray-400'>
                                 <strong>Educational Level:</strong> <span className='text-gray-200'>{selectedResident.educational_level}</span>
                             </p>
+                        </div>
+                        <div className='mt-4'>
+                            <h3 className='text-lg font-semibold text-gray-100'>QR Code</h3>
+                            <img src={selectedResident.qrCode} alt="QR Code" className='mt-2' />
+                            <button
+                                className='bg-blue-500 text-white px-4 py-2 rounded-lg mt-4'
+                                onClick={() => handleDownloadQR(selectedResident.qrCode, selectedResident.fullname)}
+                            >
+                                <Download size={18} className='mr-2' /> Download QR Code
+                            </button>
                         </div>
                     </div>
                 </div>
