@@ -1,4 +1,4 @@
-import { BarChart2, FileText, Megaphone, LayoutDashboard, Menu, Settings, ChartNoAxesCombined, ClipboardList, Users, ContactRound } from "lucide-react";
+import { BarChart2, CalendarFold, QrCode, FileText, Megaphone, LayoutDashboard, Menu, Settings, ChartNoAxesCombined, ClipboardList, Users, ContactRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -19,8 +19,9 @@ const SIDEBAR_ITEMS = [
     { name: "Officials", icon: ClipboardList, color: "#3B82F6", href: "/officials" },
     { name: "Announcements", icon: Megaphone, color: "#FF0000", href: "/announcements", roles: ["resident", "admin", "barangay captain", "staff"]  },
     { name: "Projects", icon: LayoutDashboard, color: "#3B82F6", href: "/projects" },
-    { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/settings" },
-    { name: "QR Scanner", icon: Settings, color: "#6EE7B7", href: "/qr_code" },
+    { name: "Events", icon: CalendarFold, color: "#A52A2A", href: "/events" },
+    { name: "QR Code", icon: QrCode, color: "#66CDAA", href: "/qr_code" },
+    { name: "Settings", icon: Settings, color: "#EB5406", href: "/settings" },
 ];
 
 const Sidebar = () => {

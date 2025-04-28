@@ -705,6 +705,97 @@ app.delete('/announcements/:id', async (req, res) => {
   }
 });
 
+
+
+// Route to save an event
+app.post('/events', async (req, res) => {
+  const { name, date, time, location, status } = req.body;
+
+  // Validate input fields
+  if (!name || !date || !time || !location || !status) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+    // Increment the eventId counter
+    const eventId = await client.incr('eventIdCounter');
+
+    // Set event data in Redis (using object syntax for Redis v4 and above)
+    const eventData = { name, date, time, location, status };
+
+    // Save event data in Redis hash
+    await client.hSet(`events:${eventId}`, 'name', eventData.name);
+    await client.hSet(`events:${eventId}`, 'date', eventData.date);
+    await client.hSet(`events:${eventId}`, 'time', eventData.time);
+    await client.hSet(`events:${eventId}`, 'location', eventData.location);
+    await client.hSet(`events:${eventId}`, 'status', eventData.status);
+        
+    // Respond with success message
+    res.status(201).json({ message: 'Event saved successfully', eventId });
+  } catch (error) {
+    console.error('Error saving event:', error);
+    res.status(500).json({ message: 'Failed to save event' });
+  }
+});
+
+// Read (R)
+app.get('/events/:eventId', async (req, res) => {
+  const eventId = req.params.eventId;
+  const events = await client.hGetAll(`events:${eventId}`);
+  if (Object.keys(events).length === 0) {
+    return res.status(404).json({ message: 'Event not found' });
+  }
+  res.json(event);
+});
+
+// Read all students
+app.get('/events', async (req, res) => {
+  const keys = await client.keys('events:*');
+  const events = await Promise.all(keys.map(async (key) => {
+    return { eventId: key.split(':')[1], ...(await client.hGetAll(key)) };
+  }));
+  res.json(events);
+});
+
+// Update (U)
+app.put('/events/:eventId', async (req, res) => {
+  const eventId = req.params.eventId;
+  const { name, date, time, location, status } = req.body;
+
+  if (!name && !date && !time && !location && !status) {
+    return res.status(400).json({ message: 'At least one field is required to update' });
+  }
+
+  try {
+    const existingEvents = await client.hGetAll(`events:${eventId}`);
+    if (Object.keys(existingEvents).length === 0) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Update student data in Redis
+    if (name) await client.hSet(`events:${eventId}`, 'name', name);
+    if (date) await client.hSet(`events:${eventId}`, 'date', date);
+    if (time) await client.hSet(`events:${eventId}`, 'time', time);
+    if (location) await client.hSet(`events:${eventId}`, 'location', location);
+    if (status) await client.hSet(`events:${eventId}`, 'status', status);
+    
+    res.status(200).json({ message: 'Event updated successfully' });
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({ message: 'Failed to update event' });
+  }
+});
+
+
+// Delete (D)
+app.delete('/events/:eventId', async (req, res) => {
+  const eventId = req.params.eventId;
+  await client.del(`events:${eventId}`);
+  res.status(200).json({ message: 'Event deleted successfully' });
+});
+
+
+
 app._router.stack.forEach((middleware) => {
   if (middleware.route) { // If middleware has a route
       console.log(`✅ Registered Route: ${middleware.route.path}`);
