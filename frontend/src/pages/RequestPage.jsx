@@ -42,6 +42,8 @@ const RequestPage = () => {
                 toast.success("Request submitted successfully!");
                 fetchUserRequests(); // Refresh the list of requests
             } else {
+                const errorData = await response.json();
+                console.error("Error submitting request:", errorData);
                 toast.error("Failed to submit request.");
             }
         } catch (error) {
@@ -62,7 +64,7 @@ const RequestPage = () => {
 
     const confirmCancelRequest = async () => {
         try {
-            await fetch(`http://localhost:5000/request/${selectedRequest.id}`, {
+            await fetch(`http://localhost:5000/request/${selectedRequest._id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -86,8 +88,8 @@ const RequestPage = () => {
 
     const handleSaveChanges = async () => {
         try {
-            const { id, status, dateOfRequest, ...editableFields } = selectedRequest; // Exclude non-editable fields
-            await fetch(`http://localhost:5000/request/${id}`, {
+            const { _id, status, dateOfRequest, ...editableFields } = selectedRequest; // Exclude non-editable fields
+            await fetch(`http://localhost:5000/request/${_id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

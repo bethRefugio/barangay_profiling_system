@@ -44,7 +44,7 @@ const RequestedTable = ({ requests, onViewDetails, onCancelRequest }) => {
                     <tbody className="divide-y divide-gray-700">
                         {requests.map((request) => (
                             <motion.tr
-                                key={request.id}
+                                key={request._id}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.3 }}

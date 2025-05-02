@@ -148,6 +148,10 @@ const ResidentsTable = () => {
 
     const handleEditResident = async (e) => {
         e.preventDefault();
+        if (!selectedResidentId) {
+            toast.error('Resident ID is missing. Cannot update resident.');
+            return;
+        }
         try {
             await axios.put(`${API_URL}/${selectedResidentId}`, newResident);
             toast.success('Resident updated successfully!');
@@ -175,19 +179,28 @@ const ResidentsTable = () => {
     };
 
     const handleEditClick = (resident) => {
-        setSelectedResidentId(resident.residentId);
+        // Fix: use resident._id or resident.id instead of resident.residentId
+        const id = resident._id || resident.id;
+        setSelectedResidentId(id);
         setNewResident(resident);
         setShowEditForm(true);
     };
 
     const handleDeleteClick = (resident) => {
-        setResidentToDelete(resident);
+        // Fix: use resident._id or resident.id instead of resident.residentId
+        const id = resident._id || resident.id;
+        setResidentToDelete({ ...resident, id });
         setShowDeleteConfirmation(true);
     };
 
     const handleDeleteResident = async () => {
+        if (!residentToDelete || (!residentToDelete.id && !residentToDelete._id)) {
+            toast.error('Resident ID is missing. Cannot delete resident.');
+            return;
+        }
         try {
-            await axios.delete(`${API_URL}/${residentToDelete.residentId}`);
+            const id = residentToDelete.id || residentToDelete._id;
+            await axios.delete(`${API_URL}/${id}`);
             toast.success('Resident deleted!');
             fetchResidents();
             setShowDeleteConfirmation(false);

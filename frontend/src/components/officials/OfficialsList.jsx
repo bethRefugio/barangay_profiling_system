@@ -59,9 +59,9 @@ const OfficialsList = () => {
     };
 
     const handleEditClick = async (official) => {
-        setSelectedOfficialId(official.id);
+        setSelectedOfficialId(official._id);
         try {
-            const response = await axios.get(`${API_URL}/${official.id}`);
+            const response = await axios.get(`${API_URL}/${official._id}`);
             setNewOfficial(response.data);
             setShowEditForm(true);
         } catch (error) {
@@ -409,7 +409,7 @@ const OfficialsList = () => {
                                 </button>
                                 <button
                                     className='text-red-400 hover:text-red-300'
-                                    onClick={() => handleDeleteClick(item.id)}
+                                    onClick={() => handleDeleteClick(item._id)}
                                 >
                                     <Trash2 size={18} />
                                 </button>

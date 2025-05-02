@@ -18,7 +18,7 @@ const EditAnnouncement = ({ announcement, onClose, onUpdate }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:5000/announcements/${announcement.id}`, {
+            const response = await fetch(`http://localhost:5000/announcements/${announcement._id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),

@@ -52,7 +52,7 @@ const AnnouncementsList = ({ announcements, onUpdate, onEdit, accountType }) => 
                                 <button
                                     className="text-red-500 hover:text-red-400"
                                     onClick={() => {
-                                        setSelectedAnnouncementId(announcement.id);
+                                        setSelectedAnnouncementId(announcement._id);
                                         setShowDeleteConfirmation(true);
                                     }}
                                 >

@@ -102,9 +102,15 @@ const UsersTable = () => {
     };
 
     const handleEditClick = async (user) => {
-        setSelectedUserId(user.id);
+        if (!user._id) {
+            console.error("Invalid user object:", user);
+            toast.error("Invalid user data!");
+            return;
+        }
+
+        setSelectedUserId(user._id);
         try {
-            const response = await axios.get(`${API_URL}/${user.id}`);
+            const response = await axios.get(`${API_URL}/${user._id}`);
             setNewUser({
                 ...response.data,
                 password: '' // Clear password field for security
@@ -118,12 +124,12 @@ const UsersTable = () => {
 
     const handleDeleteClick = (user) => {
         setUserToDelete(user);
-        setShowDeleteConfirmation(true);
+        setShowDeleteConfirmation(true);    
     };
 
     const handleDeleteUser = async () => {
         try {
-            await axios.delete(`${API_URL}/${userToDelete.id}`);
+            await axios.delete(`${API_URL}/${userToDelete._id}`);
             toast.success('User deleted!');
             fetchUsers();
             setShowDeleteConfirmation(false);
@@ -225,7 +231,7 @@ const UsersTable = () => {
                             type='text'
                             name='name'
                             placeholder='e.g., Juan Dela Cruz'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-50'
                             value={newUser.fullname}
                             onChange={handleInputChange}
                             required
@@ -237,7 +243,7 @@ const UsersTable = () => {
                             type='email'
                             name='email'
                             placeholder='e.g., juan.delacruz@gmail.com'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-50'
                             value={newUser.email}
                             onChange={handleInputChange}
                             required
@@ -262,12 +268,12 @@ const UsersTable = () => {
                                 type={showPassword ? 'text' : 'password'}
                                 name='password'
                                 placeholder='Enter password'
-                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4  py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4  py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-50'
                                 value={newUser.password}
                                 onChange={handleInputChange}
                                 required
                             />
-                            <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-9 pr-4 pr-10 text-gray-500">
+                            <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-9 pr-4 pr-2 text-gray-500">
                                 {showPassword ? <EyeOff /> : <Eye />}
                             </button>
                     </div>
@@ -275,7 +281,7 @@ const UsersTable = () => {
                         <label className='text-sm mb-1'>Account Type</label>
                         <select
                             name='accountType'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-45'
                             value={newUser.accountType}
                             onChange={handleInputChange}
                             required

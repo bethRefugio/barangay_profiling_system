@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const RequestForm = ({ onSubmit, userId }) => {
-    console.log("Current userId:", userId); // Debugging log
+const RequestForm = ({ onSubmit }) => {
+    const [userId, setUserId] = useState(null); // State to store userId
     const [formData, setFormData] = useState({
         name: "",
         age: "",
@@ -9,6 +9,13 @@ const RequestForm = ({ onSubmit, userId }) => {
         documentType: "",
         purpose: "",
     });
+
+    // Retrieve userId from sessionStorage when the component mounts
+    useEffect(() => {
+        const storedUserId = sessionStorage.getItem("userId");
+        console.log("Retrieved userId from sessionStorage:", storedUserId); // Debugging log
+        setUserId(storedUserId);
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -21,8 +28,9 @@ const RequestForm = ({ onSubmit, userId }) => {
             ...formData,
             dateOfRequest: new Date().toISOString(),
             status: "Pending",
-            userId, // Include the userId
+            userId, // Use the retrieved userId
         };
+        console.log("Request data to be submitted:", requestData); // Debugging log
         onSubmit(requestData);
         setFormData({
             name: "",

@@ -13,7 +13,14 @@ import RequestPage from "./pages/RequestPage";
 import ManageRequestPage from "./pages/ManageRequestPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
+import EventsPage from "./pages/EventsPage";
 import QRPage from "./pages/QRPage";
+import AttendancePage from "./components/attendance/AttendancePage";
+import ResidentAttendanceTable from "./components/attendance/ResidentAttendanceTable";
+import OfficialsAttendanceTable from "./components/attendance/OfficialsAttendanceTable";
+import RecordResidentAttendance from './components/attendance/RecordResidentAttendance';
+
+
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -49,7 +56,13 @@ function App() {
                     <Route path='/settings' element={<SettingsPage />} />
                     <Route path='/projects' element={<ProjectsPage />} />
                     <Route path='/announcements' element={<AnnouncementsPage />} />
+                    <Route path='/events' element={<EventsPage />} />
                     <Route path='/qr_code/*' element={<QRPage />} />
+                    <Route path="/events/attendance" element={<AttendancePage />} />
+                    <Route path="/events/attendance/residents_attendance" element={<ResidentAttendanceTable />} />
+                    <Route path="/events/attendance/officials_attendance" element={<OfficialsAttendanceTable />} />
+                    <Route path="/events/attendance/record_resident" element={<RecordResidentAttendance />} />
+
                 </Routes>
             </div>
            

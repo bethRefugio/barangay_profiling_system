@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Edit, Trash2, CalendarPlus } from "lucide-react";
+import { Edit, Trash2, CalendarPlus, ClipboardList } from "lucide-react";
 import axios from "axios";
 import { ToastContainer, toast } from 'react-toastify';
+import { useNavigate } from "react-router-dom";
 import 'react-toastify/dist/ReactToastify.css';
 
 const API_URL = 'http://localhost:5000/events';
@@ -14,6 +15,9 @@ const EventsTable = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState(null);
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState(null);
+    const navigate = useNavigate();
     const [newEvent, setNewEvent] = useState({
         name: "",
         date: "",
@@ -116,20 +120,36 @@ const EventsTable = () => {
     };
 
     const handleEditClick = (event) => {
-        setSelectedEventId(event.eventId);
+        setSelectedEventId(event.eventId || event._id || event.id);
         setNewEvent(event);
         setShowEditForm(true);
     };
 
-    const handleDeleteClick = async (eventId) => {
+    const handleDeleteClick = (event) => {
+        setEventToDelete(event);
+        setShowDeleteConfirmation(true);
+    };
+
+    const handleDeleteEvent = async () => {
         try {
-            await axios.delete(`${API_URL}/${eventId}`);
+            await axios.delete(`${API_URL}/${eventToDelete._id}`);
             toast.success('Event deleted successfully!');
             fetchEvents();
+            setShowDeleteConfirmation(false);
+            setEventToDelete(null);
         } catch (error) {
             console.error("Error deleting event:", error);
             toast.error('Error deleting event!');
         }
+    };
+
+    const handleGoToAttendance = (event) => {
+        if (!event || !event._id) {
+            console.error("Invalid event object:", event);
+            toast.error("Invalid event data!");
+            return;
+        }
+        navigate(`/events/attendance`, { state: { eventId: event._id } });
     };
 
     return (
@@ -306,6 +326,28 @@ const EventsTable = () => {
                 </form>
             )}
 
+        {showDeleteConfirmation && (
+                        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
+                            <div className='bg-gray-800 p-6 rounded-lg shadow-lg'>
+                                <h2 className='text-xl font-semibold text-gray-100 mb-4'>Are you sure you want to delete this user?</h2>
+                                <div className='flex justify-end'>
+                                    <button
+                                        className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 mr-2'
+                                        onClick={handleDeleteEvent}
+                                    >
+                                        Yes
+                                    </button>
+                                    <button
+                                        className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500'
+                                        onClick={() => setShowDeleteConfirmation(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
             <div className='overflow-x-auto'>
                 <table className='min-w-full divide-y divide-gray-700'>
                     <thead>
@@ -333,7 +375,7 @@ const EventsTable = () => {
                     <tbody className='divide-y divide-gray-700'>
                         {filteredEvents.map((event) => (
                             <motion.tr
-                                key={event.eventId}
+                                key={event.eventId || event._id || index}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.3 }}
@@ -366,18 +408,25 @@ const EventsTable = () => {
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     <div className='flex flex-col space-y-2'> {/* Flex column with spacing */}
                                         <button
+                                            className='text-yellow-400 hover:text-yellow-300 flex items-center space-x-1' 
+                                            onClick={() => handleGoToAttendance(event)}
+                                        >
+                                            <ClipboardList size={18} />
+                                            <span>Go to Attendance</span>
+                                        </button>
+                                        <button
                                             className='text-indigo-400 hover:text-indigo-300 flex items-center space-x-1' 
                                             onClick={() => handleEditClick(event)}
                                         > 
                                             <Edit size={18} />
-                                            <span>Edit</span>
+                                            <span>Edit Event</span>
                                         </button>
                                         <button
                                             className='text-red-400 hover:text-red-300 flex items-center space-x-1' 
-                                            onClick={() => handleDeleteClick(event.eventId)}
+                                            onClick={() => handleDeleteClick(event)}
                                         >
                                             <Trash2 size={18} />
-                                            <span>Delete</span>
+                                            <span>Delete Event</span>
                                         </button>
                                     </div>
                                 </td>

@@ -20,6 +20,7 @@ const LoginPage = () => {
     
             if (response.status === 200) {
                 const { userId } = response.data;
+                console.log("Received userId from backend:", userId); // Debugging log
                 sessionStorage.setItem('userId', userId);
                 console.log("Login successful", response.data);
                 navigate('/overview');

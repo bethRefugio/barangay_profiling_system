@@ -66,7 +66,7 @@ const ManageRequest = ({ accountType }) => {
 
     const handleSaveChanges = async () => {
         try {
-            await axios.put(`${API_URL}/${editableRequest.id}`, editableRequest);
+            await axios.put(`${API_URL}/${editableRequest._id}`, editableRequest);
             toast.success("Request updated successfully!");
             setShowDetails(false);
             fetchRequests();
@@ -159,14 +159,14 @@ const ManageRequest = ({ accountType }) => {
                                         <>
                                             <button
                                                 className="text-green-400 hover:text-green-300 mr-2 flex items-center justify-center"
-                                                onClick={() => handleConfirmRequest(request.id)}
+                                                onClick={() => handleConfirmRequest(request._id)}
                                             >
                                                 <CheckCircle size={18} className="mr-1" />
                                                 <span>Confirm</span>
                                             </button>
                                             <button
                                                 className="text-red-400 hover:text-red-300 mr-2 flex items-center justify-center"
-                                                onClick={() => handleRejectRequest(request.id)}
+                                                onClick={() => handleRejectRequest(request._id)}
                                             >
                                                 <XCircle size={18} className="mr-1" />
                                                 <span>Reject</span>
