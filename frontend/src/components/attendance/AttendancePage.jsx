@@ -39,10 +39,10 @@ const AttendancePage = () => {
             <h1 className="text-2xl font-bold mb-6">Attendance for {eventName || "Loading..."}</h1>
             <div className="flex space-x-4">
                 <button
-                    className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600"
+                    className="bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600"
                     onClick={() => navigate('/events/attendance/record_resident', { state: { eventId } })} // Pass eventId to RecordResidentAttendance
                 >
-                    Record Attendance
+                    Record Residents Attendance
                 </button>
                 <button
                     className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600"
@@ -50,8 +50,16 @@ const AttendancePage = () => {
                 >
                     View Residents Attendance
                 </button>
+            </div>
+            <div className="flex space-x-4 mt-4">
                 <button
                     className="bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600"
+                    onClick={() => navigate('/events/attendance/record_official', { state: { eventId } })} // Pass eventId to RecordResidentAttendance
+                >
+                    Record Officials Attendance
+                </button>
+                <button
+                    className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600"
                     onClick={() => navigate(`/events/attendance/officials_attendance`, { state: { eventId } })}
                 >
                     View Officials Attendance

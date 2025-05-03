@@ -1,6 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import axios from "axios";
+import { ArrowLeft, Trash2 } from "lucide-react";
+import { ToastContainer, toast} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ResidentAttendanceTable = () => {
     const location = useLocation();
@@ -8,6 +11,9 @@ const ResidentAttendanceTable = () => {
     const { eventId } = location.state || {};
     const [residents, setResidents] = useState([]);
     const [eventName, setEventName] = useState("");
+    const [selectedAttendanceId, setSelectedAttedanceId] = useState(null);
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [recordToDelete, setRecordToDelete] = useState(null);
 
     useEffect(() => {
         const fetchEventDetails = async () => {
@@ -54,22 +60,26 @@ const ResidentAttendanceTable = () => {
         return <p className="text-red-500">Invalid event. Please go back and select a valid event.</p>;
     }
 
+    //const handleDeleteClick = (Attendance)
+
     return (
         <div className="p-6 bg-gray-800 text-white relative">
             <button
-                className="absolute top-4 left-4 bg-gray-800 text-white px-3 py-2 rounded-lg hover:bg-gray-600 flex items-center"
+                className="absolute top-4 left-4 bg-gray-800 text-white px-3 py-2 rounded-lg hover:bg-gray-600"
                 onClick={() => navigate("/events/attendance", { state: { eventId } })}
             >
                 <ArrowLeft size={20} className="mr-2" />
             </button>
             
             <h1 className="text-2xl font-bold mb-6 mt-12 text-center">Residents Attendance for {eventName}</h1>
-            <button
-                className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600 mt-4 align-left"
-                onClick={() => navigate('/events/attendance/record_resident', { state: { eventId } })}
-            >
-                Record Attendance
-            </button>
+            <div className="flex justify-end">
+                <button
+                    className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600 mt-4 "
+                    onClick={() => navigate('/events/attendance/record_resident', { state: { eventId } })}
+                >
+                    Record Attendance
+                </button>
+            </div>
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">
                     <thead>

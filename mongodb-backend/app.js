@@ -99,10 +99,12 @@ const ResidentSchema = new mongoose.Schema({
 });
 
 const OfficialSchema = new mongoose.Schema({
+    _id: Number,
     fullname: String,
     position: String,
     phone: String,
-    profilePhoto: { type: String, default: 'uploads/default-profile.png' }
+    profilePhoto: { type: String, default: 'uploads/default-profile.png' },
+    qrCode: String
 });
 
 const RequestSchema = new mongoose.Schema({
@@ -153,6 +155,15 @@ const ResidentAttendanceSchema = new mongoose.Schema({
     time: Date,
 });
 
+const OfficialAttendanceSchema = new mongoose.Schema({
+    officialId: Number,
+    fullname: String,
+    position: String,
+    phone: String,
+    eventId: Number,
+    time: Date,
+});
+
 const Counter = mongoose.model('Counter', CounterSchema);
 const User = mongoose.model('User', UserSchema);
 const Resident = mongoose.model('Resident', ResidentSchema);
@@ -163,6 +174,8 @@ const Announcement = mongoose.model('Announcement', AnnouncementSchema);
 const Event = mongoose.model('Event', EventSchema);
 const ORCounter = mongoose.model('ORCounter', ORCounterSchema);
 const ResidentAttendance = mongoose.model('ResidentAttendance', ResidentAttendanceSchema);
+const OfficialAttendance = mongoose.model('OfficialAttendance', OfficialAttendanceSchema);
+
 
 const getNextSequence = async (entity) => {
     const counter = await Counter.findOneAndUpdate(
@@ -489,11 +502,17 @@ app.post('/official', async (req, res) => {
     }
 
     try {
+        const officialId = await getNextSequence('OfficialId'); // Get the next residentId
+        const qrCodeData = `Official ID: ${officialId}`;
+        const qrCode = await QRCode.toDataURL(qrCodeData);
+
         const official = new Official({
+            _id: officialId, 
             fullname,
             position,
             phone,
-            profilePhoto: profilePhoto && profilePhoto.trim() !== "" ? profilePhoto : 'uploads/default-profile.png'
+            profilePhoto: profilePhoto && profilePhoto.trim() !== "" ? profilePhoto : 'uploads/default-profile.png',
+            qrCode
         });
 
         await official.save();
@@ -884,7 +903,7 @@ const fetchResidentDetails = async (residentId) => {
     }
 }
 
-const saveAttendanceDetails = async (resident, eventId) => {
+const saveResidentAttendanceDetails = async (resident, eventId) => {
     try {
         // Format the current time to exclude milliseconds
         const currentTime = new Date();
@@ -940,7 +959,7 @@ app.post('/attendance_residents', async (req, res) => {
         const resident = await fetchResidentDetails(residentId);
 
         // Save attendance details
-        const attendance = await saveAttendanceDetails(resident, eventId);
+        const attendance = await saveResidentAttendanceDetails(resident, eventId);
 
         // Respond with the attendance details
         res.status(201).json({ message: 'Attendance recorded successfully', attendance });
@@ -960,6 +979,127 @@ app.get('/residents_attendance', async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch residents attendance' });
     }
 });
+
+// Delete event
+app.delete('/residents_attendance/:_id', async (req, res) => {
+    try {
+        const ResidentAttendance = await ResidentAttendance.findByIdAndDelete(req.params._id);
+        if (!ResidentAttendance) {
+            return res.status(404).json({ message: 'Attendance record not found' });
+        }
+        res.status(200).json({ message: 'Attendance record deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting attendance record:', error);
+        res.status(500).json({ message: 'Failed to delete attendance record' });
+    }
+});
+
+
+
+const fetchOfficialDetails = async (officialId) => {
+    try {
+        const official = await Official.findById(officialId);
+        if (!official) {
+            throw new Error('Official not found');
+        }
+        return official;
+    } catch (error) {
+        console.error('Error fetching official details:', error);
+        throw error;
+    }
+}
+
+const saveOfficialAttendanceDetails = async (official, eventId) => {
+    try {
+        // Format the current time to exclude milliseconds
+        const currentTime = new Date();
+        const formattedTime = new Date(
+            currentTime.getFullYear(),
+            currentTime.getMonth(),
+            currentTime.getDate(),
+            currentTime.getHours(),
+            currentTime.getMinutes(),
+            currentTime.getSeconds()
+        );
+
+        // Check if an attendance record already exists with the same residentId, eventId, and time
+        const existingAttendance = await OfficialAttendance.findOne({
+            officialId: official._id,
+            eventId: eventId,
+            time: formattedTime,
+        });
+
+        if (existingAttendance) {
+            throw new Error('Attendance already recorded for this official and event at the same time');
+        }
+
+        // Create the attendance record
+        const attendance = {
+            officialId: official._id,
+            fullname: official.fullname,
+            position: official.position,
+            phone: official.phone,
+            eventId: eventId,
+            time: formattedTime, // Use formatted time
+        };
+
+        await OfficialAttendance.create(attendance);
+        return attendance;
+    } catch (error) {
+        console.error('Error saving attendance details:', error);
+        throw error;
+    }
+};
+
+// Endpoint to handle attendance recording
+app.post('/attendance_officials', async (req, res) => {
+    const { officialId, eventId } = req.body;
+
+    if (!officialId || !eventId) { // Check if either officialId or eventId is missing
+        return res.status(400).json({ message: 'Official ID and Event ID are required' });
+    }
+
+    try {
+        // Fetch resident details
+        const official = await fetchOfficialDetails(officialId);
+
+        // Save attendance details
+        const attendance = await saveOfficialAttendanceDetails(official, eventId);
+
+        // Respond with the attendance details
+        res.status(201).json({ message: 'Attendance recorded successfully', attendance });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Endpoint to fetch attendance for a specific event
+app.get('/officials_attendance', async (req, res) => {
+    try {
+        const officialsAttendance = await OfficialAttendance.find(); // Fetch all attendance records
+        res.status(200).json(officialsAttendance);
+    } catch (error) {
+        console.error('Error fetching officials attendance:', error);
+        res.status(500).json({ message: 'Failed to fetch officials attendance' });
+    }
+});
+
+// Delete event
+app.delete('/officials_attendance/:_id', async (req, res) => {
+    try {
+        const OfficialAttendance = await OfficialAttendance.findByIdAndDelete(req.params._id);
+        if (!OfficialAttendance) {
+            return res.status(404).json({ message: 'Attendance record not found' });
+        }
+        res.status(200).json({ message: 'Attendance record deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting attendance record:', error);
+        res.status(500).json({ message: 'Failed to delete attendance record' });
+    }
+});
+
+
 
 // Log registered routes for debugging
 if (app._router && app._router.stack) {

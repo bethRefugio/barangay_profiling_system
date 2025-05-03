@@ -73,7 +73,7 @@ const LoginPage = () => {
                             <KeyRound className="mr-2 text-gray-500" />
                             <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="flex-1 bg-transparent outline-none text-lg text-white" style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }} />
                             <button type="button" onClick={togglePasswordVisibility} className="text-gray-500">
-                                {showPassword ? <EyeOff /> : <Eye />}
+                                {showPassword ? <Eye /> : <EyeOff />}
                             </button>
                         </div>
                     </div>

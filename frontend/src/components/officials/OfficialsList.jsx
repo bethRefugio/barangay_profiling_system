@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { PhoneIncoming, Edit, Trash2, UserPlus, Search } from "lucide-react";
+import { PhoneIncoming, Edit, Trash2, UserPlus, Search, Download } from "lucide-react";
 import axios from "axios";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import DeleteOfficialConfirmation from './DeleteOfficialConfirmation'; // Import the new component
+import DeleteOfficialConfirmation from './DeleteOfficialConfirmation';
+import { QRCodeCanvas } from "qrcode.react"; // Use QRCodeCanvas for QR code generation
 
 const API_URL = 'http://localhost:5000/official';
 
@@ -181,6 +182,15 @@ const OfficialsList = () => {
         }
     }, [searchTerm, officials]);
     
+    const handleDownloadQR = (qrCodeUrl, fullname) => {
+        const link = document.createElement("a");
+        link.href = qrCodeUrl; // Use the QR code URL
+        link.download = `${fullname}_QR_Code.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("QR Code downloaded successfully!");
+    };
 
     return (
         <div>
@@ -375,40 +385,61 @@ const OfficialsList = () => {
             )}
 
             <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8'>
-                {(searchTerm ? filteredOfficials : officials).map((item, index) => (
+            {(searchTerm ? filteredOfficials : officials).map((item, index) => (
                     <motion.div
                         key={item.id}
-                        className='bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg shadow-lg rounded-xl p-6 border border-gray-700 flex flex-col items-center'
+                        className="bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg shadow-lg rounded-xl p-6 border border-gray-700 flex flex-col items-center"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                     >
-                        {/* Profile Photo Centered at the Top */}
+                        {/* Profile Photo */}
                         <img
                             src={`http://localhost:5000/${item.profilePhoto}`}
                             alt="Official's Photo"
-                            className='w-28 h-28 object-cover rounded-full border border-gray-500 mb-3'
-                            onError={(e) => { e.target.src = 'http://localhost:5000/uploads/default-profile.png'; }} 
+                            className="w-28 h-28 object-cover rounded-full border border-gray-500 mb-3"
+                            onError={(e) => {
+                                e.target.src = "http://localhost:5000/uploads/default-profile.png";
+                            }}
                         />
 
                         {/* Official's Information */}
-                        <div className='text-center'>
-                            <h3 className='text-sm font-medium text-gray-400'>{item.position}</h3>
-                            <p className='mt-1 text-xl font-semibold text-gray-100'>{item.fullname}</p>
-                            <p className='mt-1 text-sm text-gray-400'>{item.phone}</p>
+                        <div className="text-center">
+                            <h3 className="text-sm font-medium text-gray-400">{item.position}</h3>
+                            <p className="mt-1 text-xl font-semibold text-gray-100">{item.fullname}</p>
+                            <p className="mt-1 text-sm text-gray-400">{item.phone}</p>
                         </div>
 
-                        {/* Buttons for Edit and Delete (If Admin or Barangay Captain) */}
+                        {(accountType === "staff" || accountType === "admin" || accountType === "barangay captain") && (
+                        <div className="mt-4 flex flex-col items-center">
+                            <h3 className="text-lg font-semibold text-gray-100">QR Code</h3>
+                            <img
+                                src={item.qrCode} // Use the QR code URL from the backend
+                                alt="QR Code"
+                                className="mt-2"
+                            />
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-4 hover:bg-blue-600 flex items-center"
+                                onClick={() => handleDownloadQR(item.qrCode, item.fullname)}
+                            >
+                                <Download size={18} className="mr-2" />
+                                <span>Download QR Code</span>
+                            </button>
+                        </div>
+
+                        )}
+
+                        {/* Edit and Delete Buttons */}
                         {(accountType === "admin" || accountType === "barangay captain") && (
-                            <div className='flex justify-end mt-4'>
+                            <div className="flex justify-end mt-4">
                                 <button
-                                    className='text-indigo-400 hover:text-indigo-300 mr-2'
+                                    className="text-indigo-400 hover:text-indigo-300 mr-2"
                                     onClick={() => handleEditClick(item)}
                                 >
                                     <Edit size={18} />
                                 </button>
                                 <button
-                                    className='text-red-400 hover:text-red-300'
+                                    className="text-red-400 hover:text-red-300"
                                     onClick={() => handleDeleteClick(item._id)}
                                 >
                                     <Trash2 size={18} />

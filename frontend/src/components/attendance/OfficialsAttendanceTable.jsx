@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
+import { ToastContainer, toast} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const OfficialsAttendanceTable = () => {
     const location = useLocation();
@@ -28,7 +30,7 @@ const OfficialsAttendanceTable = () => {
     useEffect(() => {
         const fetchOfficialsAttendance = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/events/${eventId}/officials_attendance`);
+                const response = await fetch(`http://localhost:5000/officials_attendance`);
                 const data = await response.json();
                 setOfficials(data);
             } catch (error) {
@@ -65,7 +67,10 @@ const OfficialsAttendanceTable = () => {
                                 Position
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                Status
+                                Phone Number
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Time
                             </th>
                         </tr>
                     </thead>
@@ -73,13 +78,16 @@ const OfficialsAttendanceTable = () => {
                         {officials.map((official) => (
                             <tr key={official._id}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                    {official.name}
+                                    {official.fullname}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                     {official.position}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {official.status}
+                                    {official.phone}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {new Date(official.time).toLocaleString()}
                                 </td>
                             </tr>
                         ))}

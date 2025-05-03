@@ -19,6 +19,7 @@ import AttendancePage from "./components/attendance/AttendancePage";
 import ResidentAttendanceTable from "./components/attendance/ResidentAttendanceTable";
 import OfficialsAttendanceTable from "./components/attendance/OfficialsAttendanceTable";
 import RecordResidentAttendance from './components/attendance/RecordResidentAttendance';
+import RecordOfficialsAttendance from './components/attendance/RecordOfficialsAttendance';
 
 
 import { ToastContainer } from 'react-toastify';
@@ -62,6 +63,7 @@ function App() {
                     <Route path="/events/attendance/residents_attendance" element={<ResidentAttendanceTable />} />
                     <Route path="/events/attendance/officials_attendance" element={<OfficialsAttendanceTable />} />
                     <Route path="/events/attendance/record_resident" element={<RecordResidentAttendance />} />
+                    <Route path="/events/attendance/record_official" element={<RecordOfficialsAttendance />} />
 
                 </Routes>
             </div>

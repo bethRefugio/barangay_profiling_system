@@ -364,7 +364,7 @@ const UsersTable = () => {
                                 required
                             />
                             <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-9 pr-4 pr-10 text-gray-500">
-                                {showPassword ? <EyeOff /> : <Eye />}
+                                {showPassword ? <Eye /> : <EyeOff />}
                             </button>
                         </div>
                         <div className='flex flex-col'>

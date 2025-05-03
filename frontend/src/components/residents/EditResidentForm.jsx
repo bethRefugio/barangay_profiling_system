@@ -112,11 +112,11 @@ const EditResidentForm = ({ newResident, handleInputChange, handleEditResident, 
                         required
                     >
                         <option value='' disabled>Select Civil Status</option>
-                        <option value='single'>Single</option>
-                        <option value='married'>Married</option>
-                        <option value='separated'>Separated</option>
-                        <option value='divorced'>Divorced</option>
-                        <option value='widowed'>Widowed</option>
+                        <option value='Single'>Single</option>
+                        <option value='Married'>Married</option>
+                        <option value='Separated'>Separated</option>
+                        <option value='Divorced'>Divorced</option>
+                        <option value='Widowed'>Widowed</option>
                     </select>
                 </div>
                 <div className='flex flex-col'>
