@@ -55,11 +55,12 @@ const ResidentsPage = () => {
           
                 <ResidentsTable />
 
-                {/* CHARTS */}
+                {/* CHARTS
                 <div className='grid grid-col-1 lg:grid-cols-2 gap-8'>
                     <PurokDistribution />
                     <AgeDistribution />
                 </div>
+                 */}
             </main>
         </div>
     );

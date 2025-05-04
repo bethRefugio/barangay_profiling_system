@@ -980,6 +980,20 @@ app.get('/residents_attendance', async (req, res) => {
     }
 });
 
+// Fetch specific record
+app.get('/residents_attendance/:_id', async (req, res) => {
+    try {
+        const ResidentAttendance = await ResidentAttendance.findById(req.params._id);
+        if (!ResidentAttendance) {
+            return res.status(404).json({ message: 'Record not found' });
+        }
+        res.json(ResidentAttendance);
+    } catch (error) {
+        console.error('Error fetching record:', error);
+        res.status(500).json({ message: 'Failed to fetch record' });
+    }
+});
+
 // Delete event
 app.delete('/residents_attendance/:_id', async (req, res) => {
     try {

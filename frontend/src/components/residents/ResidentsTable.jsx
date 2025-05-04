@@ -218,11 +218,11 @@ const ResidentsTable = () => {
         }
 
         const csvHeaders = [
-            "Full Name, Age, Purok, Gender, Birthdate, Email, Phone, Civil Status, PWD, Registered Voter, Employment Status, Income Source, Educational Level"
+            "Full Name, Age, Purok, Gender, Birthdate, Email, Phone, Civil Status, PWD, Registered Voter, Employment Status, Income Source, Educational Level, QR Code"
         ];
 
         const csvRows = filteredResidents.map(resident =>
-            `"${resident.fullname}","${resident.age}","${resident.purok}","${resident.gender}","${resident.birthdate}","${resident.email}","${resident.phone}","${resident.civil_status}","${resident.is_pwd}","${resident.is_aVoter}","${resident.employment_status}","${resident.income_source}","${resident.educational_level}"`
+            `"${resident.fullname}","${resident.age}","${resident.purok}","${resident.gender}","${resident.birthdate}","${resident.email}","${resident.phone}","${resident.civil_status}","${resident.is_pwd}","${resident.is_aVoter}","${resident.employment_status}","${resident.income_source}","${resident.educational_level}","${qrCodeBase64}"`
         );
 
         const csvContent = [csvHeaders, ...csvRows].join("\n");

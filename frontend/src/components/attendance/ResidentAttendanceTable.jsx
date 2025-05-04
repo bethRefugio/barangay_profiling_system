@@ -64,9 +64,25 @@ const ResidentAttendanceTable = () => {
         setSearchTerm(term);
 
         const filtered = residents.filter((resident) =>
-            Object.values(resident).some((value) =>
-                typeof value === "string" && value.toLowerCase().includes(term)
-            )
+            Object.keys(resident).some((key) => {
+            const value = resident[key];
+
+            if(key === "time") {
+                const date = new Date(value).toLocaleDateString().toLowerCase();
+                const time = new Date(value).toLocaleTimeString().toLowerCase();
+                return date.includes(term) || time.includes(term);
+            }
+            
+            if (typeof value === "string") {
+                if (key === "gender") {
+                    return value.toLowerCase() === term;
+                }
+                return value.toLowerCase().includes(term);
+            } else if (typeof value === "number") {
+                return value.toString().includes(term); // Convert number to string for comparison
+            }
+            return false;
+            })
         );
 
         setFilteredResidents(filtered);
@@ -155,6 +171,9 @@ const ResidentAttendanceTable = () => {
                                 Purok
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                 Time
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -163,34 +182,41 @@ const ResidentAttendanceTable = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
-                        {residents.length > 0 ? (
-                            residents.map((resident) => (
-                                <tr key={resident._id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                        {resident.name}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                        {resident.age}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                        {resident.gender}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                        {resident.purok}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                        {new Date(resident.time).toLocaleString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                        <button
-                                            className="text-red-400 hover:text-red-300"
-                                            onClick={() => handleDeleteClick(resident._id)}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                        {filteredResidents.length > 0 ? (
+                            filteredResidents.map((resident) => {
+                                 const date = new Date(resident.time).toLocaleDateString(); // Extract date
+                                const time = new Date(resident.time).toLocaleTimeString(); // Extract time
+                                return (
+                                    <tr key={resident._id}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                            {resident.name}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                            {resident.age}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                            {resident.gender}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                            {resident.purok}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                            {date}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                            {time}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                            <button
+                                                className="text-red-400 hover:text-red-300"
+                                                onClick={() => handleDeleteClick(resident._id)}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                            );
+                        })
                         ) : (
                             <tr>
                                 <td

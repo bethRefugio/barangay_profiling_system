@@ -15,13 +15,14 @@ const Profile = () => {
         email: '',
         password: ''
     });
-    const [profilePhoto, setProfilePhoto] = useState('backend/uploads/default-profile.png'); // Set default profile photo initially
+    const [profilePhoto, setProfilePhoto] = useState('backend/uploads/default-profile.png');
+    const [residentQRCode, setResidentQRCode] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const userId = sessionStorage.getItem('userId'); // Get userId from sessionStorage
+                const userId = sessionStorage.getItem('userId');
                 if (!userId) {
                     throw new Error('User ID not found in session storage');
                 }
@@ -30,16 +31,47 @@ const Profile = () => {
                 setUpdatedUser({
                     name: response.data.name,
                     email: response.data.email,
-                    password: '' // Password is not fetched for security reasons
+                    password: ''
                 });
-                setProfilePhoto(response.data.profilePhoto || 'backend/uploads/default-profile.png'); // Set default profile photo if not available
+                setProfilePhoto(response.data.profilePhoto || 'backend/uploads/default-profile.png');
             } catch (error) {
                 console.error('Error fetching user:', error);
             }
         };
 
+        const fetchResidents = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/resident');
+                const residents = response.data;
+
+                const matchingResident = residents.find(
+                    (resident) =>
+                        resident.fullname.toLowerCase() === updatedUser.name.toLowerCase() &&
+                        resident.email.toLowerCase() === updatedUser.email.toLowerCase()
+                );
+
+                if (matchingResident) {
+                    setResidentQRCode(matchingResident.qrCode);
+                }
+            } catch (error) {
+                console.error('Error fetching residents:', error);
+            }
+        };
+
         fetchUser();
-    }, []);
+        fetchResidents();
+    }, [updatedUser.name, updatedUser.email]);
+
+    const handleDownloadQRCode = () => {
+        if (!residentQRCode) return;
+
+        const link = document.createElement('a');
+        link.href = residentQRCode;
+        link.download = 'resident_qrcode.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -50,30 +82,23 @@ const Profile = () => {
         e.preventDefault();
         try {
             const userId = sessionStorage.getItem('userId');
-    
-            // Create FormData object for image upload
+
             const formData = new FormData();
             formData.append('name', updatedUser.name);
             formData.append('email', updatedUser.email);
             if (updatedUser.password) {
                 formData.append('password', updatedUser.password);
             }
-    
-            // Check if a new profile photo was selected
+
             if (profilePhoto instanceof File) {
                 formData.append('profilePhoto', profilePhoto);
             }
-    
-            // Debugging: Log what is being sent
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}:`, value);
-            }
-    
+
             await axios.put(`http://localhost:5000/user/${userId}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
             });
-    
+
             toast.success('Profile updated successfully!');
             setEditMode(false);
             setUser({ ...user, ...updatedUser });
@@ -82,7 +107,6 @@ const Profile = () => {
             toast.error('Error updating profile!');
         }
     };
-    
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -94,7 +118,6 @@ const Profile = () => {
             setProfilePhoto(file);
         }
     };
-    
 
     const handleLogout = () => {
         sessionStorage.removeItem('userId');
@@ -197,7 +220,7 @@ const Profile = () => {
                     </div>
                 </form>
             ) : (
-                <div className='flex justify-between'>
+                <div className='flex flex-col items-center'>
                     <button
                         className='bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-200 w-full sm:w-auto'
                         onClick={() => setEditMode(true)}
@@ -205,11 +228,28 @@ const Profile = () => {
                         Edit Profile
                     </button>
                     <button
-                        className='bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full sm:w-auto ml-4'
+                        className='bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full sm:w-auto mt-4'
                         onClick={handleLogout}
                     >
                         Logout
                     </button>
+
+                    {residentQRCode && (
+                        <div className='mt-6 text-center'>
+                            <h3 className='text-lg font-semibold text-gray-100'>Your QR Code</h3>
+                            <img
+                                src={residentQRCode}
+                                alt='QR Code'
+                                className='w-40 h-40 object-contain mx-auto mt-4'
+                            />
+                            <button
+                                className='bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200 mt-4'
+                                onClick={handleDownloadQRCode}
+                            >
+                                Download QR Code
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </SettingSection>

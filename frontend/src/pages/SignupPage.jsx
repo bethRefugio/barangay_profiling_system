@@ -89,7 +89,6 @@ const SignupPage = () => {
                                 <option value="" disabled>Select Role</option>
                                 <option value="Resident">Resident</option>
                                 <option value="Staff">Staff</option>
-                                <option value="Admin">Admin</option>
                             </select>
                         </div>
                     </div>

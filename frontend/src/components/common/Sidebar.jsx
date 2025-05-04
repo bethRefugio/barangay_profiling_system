@@ -20,7 +20,7 @@ const SIDEBAR_ITEMS = [
     { name: "Announcements", icon: Megaphone, color: "#FF0000", href: "/announcements", roles: ["resident", "admin", "barangay captain", "staff"]  },
     { name: "Projects", icon: LayoutDashboard, color: "#3B82F6", href: "/projects" },
     { name: "Events", icon: CalendarFold, color: "#A52A2A", href: "/events" , roles: ["admin", "barangay captain", "staff"] },
-    { name: "QR Code", icon: QrCode, color: "#66CDAA", href: "/qr_code", roles: ["admin", "barangay captain", "staff"] },
+    //{ name: "QR Code", icon: QrCode, color: "#66CDAA", href: "/qr_code", roles: ["admin", "barangay captain", "staff"] },
     { name: "Settings", icon: Settings, color: "#EB5406", href: "/settings", roles: ["resident","admin", "barangay captain", "staff"] },
 ];
 
