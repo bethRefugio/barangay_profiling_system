@@ -130,7 +130,7 @@ const UsersTable = () => {
     const handleDeleteUser = async () => {
         try {
             await axios.delete(`${API_URL}/${userToDelete._id}`);
-            toast.success('User deleted!');
+            toast.success('User account deactivated!');
             fetchUsers();
             setShowDeleteConfirmation(false);
             setUserToDelete(null);
@@ -224,7 +224,7 @@ const UsersTable = () => {
 
             {showAddForm && (
                 <form className='mb-6' onSubmit={handleAddUser}>
-                <div className='grid grid-cols-1 md:grid-cols-4 gap-2'>
+                <div className='grid grid-cols-1 md:grid-cols-4 gap-2 mb-2'>
                     <div className='flex flex-col'>
                         <label className='text-sm mb-1'>Full Name</label>
                         <input
@@ -287,7 +287,6 @@ const UsersTable = () => {
                             required
                         >
                             <option value="" disabled>Select Role</option>
-                            <option value="Guest">Guest</option>
                             <option value="Resident">Resident</option>
                             <option value="Staff">Staff</option>
                             <option value="Barangay Captain">Barangay Captain</option>
@@ -314,7 +313,7 @@ const UsersTable = () => {
             )}   
             {showEditForm && (
                 <form className='mb-6' onSubmit={handleEditUser}>
-                    <div className='grid grid-cols-1 md:grid-cols-4 gap-2'>
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-2'>
                         <div className='flex flex-col'>
                             <label className='text-sm mb-1'>Full Name</label>
                             <input
@@ -363,9 +362,23 @@ const UsersTable = () => {
                                 onChange={handleInputChange}
                                 required
                             />
-                            <button type="button" onClick={togglePasswordVisibility} className="absolute right-3 top-9 pr-4 pr-10 text-gray-500">
+                            <button type="button" onClick={togglePasswordVisibility} className="absolute right-20 top-9 pr-4 pr-10 text-gray-500">
                                 {showPassword ? <Eye /> : <EyeOff />}
                             </button>
+                        </div>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Status</label>
+                            <select
+                                name='status'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 pr-10 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                value={newUser.status}
+                                onChange={handleInputChange}
+                                required
+                            >
+                                <option value="" disabled>Select Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
                         </div>
                         <div className='flex flex-col'>
                             <label className='text-sm mb-1'>Role</label>
@@ -377,7 +390,6 @@ const UsersTable = () => {
                                 required
                             >
                                 <option value="" disabled>Select Role</option>
-                                <option value="Guest">Guest</option>
                                 <option value="Resident">Resident</option>
                                 <option value="Staff">Staff</option>
                                 <option value="Barangay Captain">Barangay Captain</option>

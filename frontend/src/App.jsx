@@ -20,8 +20,6 @@ import ResidentAttendanceTable from "./components/attendance/ResidentAttendanceT
 import OfficialsAttendanceTable from "./components/attendance/OfficialsAttendanceTable";
 import RecordResidentAttendance from './components/attendance/RecordResidentAttendance';
 import RecordOfficialsAttendance from './components/attendance/RecordOfficialsAttendance';
-
-
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

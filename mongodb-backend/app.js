@@ -1088,8 +1088,8 @@ app.get('/officials_attendance', async (req, res) => {
 // Delete event
 app.delete('/officials_attendance/:_id', async (req, res) => {
     try {
-        const OfficialAttendance = await OfficialAttendance.findByIdAndDelete(req.params._id);
-        if (!OfficialAttendance) {
+        const attendanceRecord = await OfficialAttendance.findByIdAndDelete(req.params._id);
+        if (!attendanceRecord) {
             return res.status(404).json({ message: 'Attendance record not found' });
         }
         res.status(200).json({ message: 'Attendance record deleted successfully' });
@@ -1098,7 +1098,6 @@ app.delete('/officials_attendance/:_id', async (req, res) => {
         res.status(500).json({ message: 'Failed to delete attendance record' });
     }
 });
-
 
 
 // Log registered routes for debugging
