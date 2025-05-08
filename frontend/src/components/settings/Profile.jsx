@@ -16,7 +16,7 @@ const Profile = () => {
         password: ''
     });
     const [profilePhoto, setProfilePhoto] = useState('backend/uploads/default-profile.png');
-    const [residentQRCode, setResidentQRCode] = useState(null);
+    const [qrCode, setQRCode] = useState(null); // State to store the QR code
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -34,40 +34,29 @@ const Profile = () => {
                     password: ''
                 });
                 setProfilePhoto(response.data.profilePhoto || 'backend/uploads/default-profile.png');
-            } catch (error) {
-                console.error('Error fetching user:', error);
-            }
-        };
 
-        const fetchResidents = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/resident');
-                const residents = response.data;
-
-                const matchingResident = residents.find(
-                    (resident) =>
-                        resident.fullname.toLowerCase() === updatedUser.name.toLowerCase() &&
-                        resident.email.toLowerCase() === updatedUser.email.toLowerCase()
-                );
-
-                if (matchingResident) {
-                    setResidentQRCode(matchingResident.qrCode);
+                // Fetch the QR code based on the user's account type
+                if (response.data.accountType === 'Resident') {
+                    const residentResponse = await axios.get(`http://localhost:5000/resident/${response.data.linkedId}`);
+                    setQRCode(residentResponse.data.qrCode);
+                } else if (response.data.accountType === 'Staff') {
+                    const officialResponse = await axios.get(`http://localhost:5000/official/${response.data.linkedId}`);
+                    setQRCode(officialResponse.data.qrCode);
                 }
             } catch (error) {
-                console.error('Error fetching residents:', error);
+                console.error('Error fetching user or QR code:', error);
             }
         };
 
         fetchUser();
-        fetchResidents();
-    }, [updatedUser.name, updatedUser.email]);
+    }, []);
 
     const handleDownloadQRCode = () => {
-        if (!residentQRCode) return;
+        if (!qrCode) return;
 
         const link = document.createElement('a');
-        link.href = residentQRCode;
-        link.download = 'resident_qrcode.png';
+        link.href = qrCode;
+        link.download = 'qrcode.png';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -148,51 +137,50 @@ const Profile = () => {
             {editMode ? (
                 <form onSubmit={handleEditProfile}>
                     <div className='grid grid-cols-1 md:grid-cols-3 gap-2'>
-                    <div className='flex flex-col'>
-                        <label className='text-sm mb-1'>Full Name</label>
-                        <input
-                            type='text'
-                            name='name'
-                            placeholder='Name'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={updatedUser.name}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </div>
-                    <div className='flex flex-col'>
-                        <label className='text-sm mb-1'>Email</label>
-                        <input
-                            type='email'
-                            name='email'
-                            placeholder='Email'
-                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            value={updatedUser.email}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </div>
-                    <div className='flex flex-col'>
-                        <label className='text-sm mb-1'>Password</label>
-                        <div className='relative'>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Full Name</label>
                             <input
-                                type={showPassword ? 'text' : 'password'}
-                                name='password'
-                                placeholder='Password'
-                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
-                                value={updatedUser.password}
+                                type='text'
+                                name='name'
+                                placeholder='Name'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                value={updatedUser.name}
                                 onChange={handleInputChange}
+                                required
                             />
-                            <button
-                                type='button'
-                                className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400'
-                                onClick={togglePasswordVisibility}
-                            >
-                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
-                            </button>
                         </div>
-                    </div>
-                    
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Email</label>
+                            <input
+                                type='email'
+                                name='email'
+                                placeholder='Email'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                value={updatedUser.email}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Password</label>
+                            <div className='relative'>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    name='password'
+                                    placeholder='Password'
+                                    className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
+                                    value={updatedUser.password}
+                                    onChange={handleInputChange}
+                                />
+                                <button
+                                    type='button'
+                                    className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400'
+                                    onClick={togglePasswordVisibility}
+                                >
+                                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                                </button>
+                            </div>
+                        </div>
                         <div className='col-span-2'>
                             <label className='block text-gray-400 mb-2'>Profile Photo</label>
                             <input
@@ -220,25 +208,20 @@ const Profile = () => {
                     </div>
                 </form>
             ) : (
-                <div className='flex flex-col items-center'>
+                <div className='flex flex-col items-center justify-start'>
                     <button
                         className='bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-200 w-full sm:w-auto'
                         onClick={() => setEditMode(true)}
                     >
                         Edit Profile
                     </button>
-                    <button
-                        className='bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full sm:w-auto mt-4'
-                        onClick={handleLogout}
-                    >
-                        Logout
-                    </button>
+                   
 
-                    {residentQRCode && (
+                    {qrCode && (
                         <div className='mt-6 text-center'>
                             <h3 className='text-lg font-semibold text-gray-100'>Your QR Code</h3>
                             <img
-                                src={residentQRCode}
+                                src={qrCode}
                                 alt='QR Code'
                                 className='w-40 h-40 object-contain mx-auto mt-4'
                             />

@@ -31,54 +31,40 @@ function RecordResidentAttendance() {
     }, [eventId]);
 
     const handleScan = async (result, error) => {
-        if (result && !scanning) {
+        if (result) {
             const residentId = result?.text?.replace('Resident ID:', '').trim(); // Extract residentId from QR code
             console.log('Scanned Resident ID:', residentId);
-
-            // Debounce to prevent multiple scans
-            if (debounceRef.current) {
-                clearTimeout(debounceRef.current);
-            }
-
-            debounceRef.current = setTimeout(async () => {
-                setScanning(true); // Disable further scans temporarily
-                setMessage('Saving...'); // Display saving message
-
-                try {
-                    // Send residentId and eventId to the backend to fetch and record attendance
-                    const response = await fetch('http://localhost:5000/attendance_residents', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ residentId, eventId }), // Include eventId in the request
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        setResidentDetails(data.attendance); // Display resident details
-                        setMessage('Attendance recorded successfully!');
-                    } else {
-                        setMessage(data.message || 'Failed to record attendance');
-                    }
-                } catch (err) {
-                    console.error('Error recording attendance:', err);
-                    setMessage('Error recording attendance');
+    
+            setMessage('Saving...'); // Display saving message
+    
+            try {
+                // Send residentId and eventId to the backend to fetch and record attendance
+                const response = await fetch('http://localhost:5000/attendance_residents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ residentId, eventId }), // Include eventId in the request
+                });
+    
+                const data = await response.json();
+                if (response.ok) {
+                    setResidentDetails(data.attendance); // Display resident details
+                    setMessage('Attendance recorded successfully!');
+                } else {
+                    setMessage(data.message || 'Failed to record attendance');
                 }
-
-                // Re-enable scanning after 10 seconds
-                setTimeout(() => {
-                    setScanning(false);
-                    setMessage('');
-                }, 10000);
-            }, 500); // Debounce time of 500ms
+            } catch (err) {
+                console.error('Error recording attendance:', err);
+                setMessage('Error recording attendance');
+            }
         }
-
+    
         if (error) {
             if (error.name === 'AbortError') {
                 console.warn('Camera access was interrupted. Retrying...');
                 return;
             }
             console.error('QR Reader Error:', error);
-           }
+        }
     };
 
     return (

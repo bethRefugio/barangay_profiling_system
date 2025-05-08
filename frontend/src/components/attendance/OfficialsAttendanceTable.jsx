@@ -35,11 +35,22 @@ const OfficialsAttendanceTable = () => {
         const fetchOfficialsAttendance = async () => {
             try {
                 const response = await fetch(`http://localhost:5000/officials_attendance`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch officials' attendance");
+                }
                 const data = await response.json();
-                setOfficials(data);
+                if(Array.isArray(data)) {
+                    setOfficials(data);
+                    setFilteredOfficials(data); // Initialize filtered officials with all officials
+                } else {
+                    console.error("Unexpected data format:", data);
+                    setOfficials([]); 
+                    setFilteredOfficials([]); 
+                }
             } catch (error) {
                 console.error("Error fetching officials' attendance:", error);
-            }
+                setOfficials([]);
+                setFilteredOfficials([]);            }
         };
 
         if (eventId) {
@@ -52,17 +63,34 @@ const OfficialsAttendanceTable = () => {
     }
 
     const handleSearch = (e) => {
-            const term = e.target.value.toLowerCase();
-            setSearchTerm(term);
-    
-            const filtered = officials.filter((official) =>
-                Object.values(official).some((value) =>
-                    typeof value === "string" && value.toLowerCase().includes(term)
-                )
-            );
-    
-            setFilteredOfficials(filtered);
-        };
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
+
+        const filtered = officials.filter((official) =>
+            Object.keys(official).some((key) => {
+            const value = official[key];
+
+            if(key === "time") {
+                const date = new Date(value).toLocaleDateString().toLowerCase();
+                const time = new Date(value).toLocaleTimeString().toLowerCase();
+                return date.includes(term) || time.includes(term);
+            }
+            
+            if (typeof value === "string") {
+                if (key === "gender") {
+                    return value.toLowerCase() === term;
+                }
+                return value.toLowerCase().includes(term);
+            } else if (typeof value === "number") {
+                return value.toString().includes(term); // Convert number to string for comparison
+            }
+            return false;
+            })
+        );
+
+        setFilteredOfficials(filtered);
+    };
+
     
     
         const handleDeleteClick = (attendanceId) => {
@@ -137,6 +165,9 @@ const OfficialsAttendanceTable = () => {
                                 Phone Number
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                 Time
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -145,30 +176,49 @@ const OfficialsAttendanceTable = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
-                        {officials.map((official) => (
-                            <tr key={official._id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                                    {official.fullname}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {official.position}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {official.phone}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {new Date(official.time).toLocaleString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    <button
-                                        className="text-red-400 hover:text-red-300"
-                                        onClick={() => handleDeleteClick(official._id)}
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                        {filteredOfficials.length > 0 ? (
+                            filteredOfficials.map((official) => {
+                                const date = new Date(official.time).toLocaleDateString(); // Extract date
+                                const time = new Date(official.time).toLocaleTimeString(); // Extract time                               
+                                return (
+                                    <tr key={official._id}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                            {official.fullname}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                            {official.position}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                            {official.phone}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                            {date}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                            {time}
+                                        </td>
+
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                            <button
+                                                className="text-red-400 hover:text-red-300"
+                                                onClick={() => handleDeleteClick(official._id)}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                           );
+                        })
+                        ) : (
+                            <tr>
+                                <td
+                                    colSpan="6"
+                                    className="px-6 py-4 text-center text-sm text-gray-400"
+                                >
+                                    No attendance records found.
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </div>

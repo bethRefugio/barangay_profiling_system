@@ -29,10 +29,12 @@ const EventsTable = () => {
     const fetchEvents = useCallback(async () => {
         try {
             const response = await axios.get(API_URL);
-            const updatedEvents = response.data.map(event => ({
-                ...event,
-                status: calculateEventStatus(event.date, event.time)
-            }));
+            const updatedEvents = await Promise.all(
+                response.data.map(async (event) => {
+                    const updatedStatus = await calculateEventStatus(event._id, event.date, event.time);
+                    return { ...event, status: updatedStatus };
+                })
+            );
             setEvents(updatedEvents);
             setFilteredEvents(updatedEvents);
         } catch (error) {
@@ -44,21 +46,33 @@ const EventsTable = () => {
         fetchEvents();
     }, [fetchEvents]);
 
-    const calculateEventStatus = (date, time) => {
+    const calculateEventStatus = async (eventId, date, time) => {
         const eventDateTime = new Date(`${date}T${time}`);
         const now = new Date();
-
+    
+        let newStatus = "Done";
+    
         if (eventDateTime > now) {
-            return "Upcoming";
+            newStatus = "Upcoming";
         } else if (
             eventDateTime.toDateString() === now.toDateString() &&
             eventDateTime.getHours() === now.getHours() &&
             eventDateTime.getMinutes() === now.getMinutes()
         ) {
-            return "On-going";
-        } else {
-            return "Done";
+            newStatus = "On-going";
         }
+    
+        try {
+            // Update the status in the database if it has changed
+            const event = await axios.get(`${API_URL}/${eventId}`);
+            if (event.data.status !== newStatus) {
+                await axios.put(`${API_URL}/${eventId}`, { status: newStatus });
+            }
+        } catch (error) {
+            console.error("Error updating event status:", error);
+        }
+    
+        return newStatus;
     };
 
     const handleSearch = (e) => {

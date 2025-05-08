@@ -18,6 +18,7 @@ const SignupPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log("Submitting signup with data:", { name, email, password, accountType });
+    
         try {
             const response = await axios.post('http://localhost:5000/user', { name, email, password, accountType });
             console.log("Signup response:", response);
@@ -28,8 +29,15 @@ const SignupPage = () => {
             navigate("/login");
         } catch (err) {
             console.error("Signup error:", err);
-            setError('Signup failed. Please try again.');
-            toast.error("Signup failed. Please try again.");
+    
+            // Display error message from the backend
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message);
+                toast.error(err.response.data.message);
+            } else {
+                setError('Signup failed. Please try again.');
+                toast.error("Signup failed. Please try again.");
+            }
         }
     };
     

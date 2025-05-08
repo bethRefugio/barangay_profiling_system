@@ -100,16 +100,20 @@ const ResidentAttendanceTable = () => {
             const response = await fetch(`http://localhost:5000/residents_attendance/${recordToDelete}`, {
                 method: "DELETE",
             });
+    
             if (!response.ok) {
-                throw new Error("Failed to delete attendance record");
+                const errorData = await response.json();
+                console.error("Error deleting attendance record:", errorData.message);
+                throw new Error(errorData.message || "Failed to delete attendance record");
             }
+    
             toast.success("Attendance record deleted successfully!");
             setResidents((prevResidents) =>
                 prevResidents.filter((resident) => resident._id !== recordToDelete)
             );
         } catch (error) {
             console.error("Error deleting attendance record:", error);
-            toast.error("Failed to delete attendance record.");
+            toast.error(error.message || "Failed to delete attendance record.");
         } finally {
             setShowDeleteConfirmation(false);
             setRecordToDelete(null);

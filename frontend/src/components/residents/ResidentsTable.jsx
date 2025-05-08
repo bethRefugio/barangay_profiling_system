@@ -31,6 +31,7 @@ const ResidentsTable = () => {
         birthdate: "",
         email: "",
         phone: "",
+        religion: "",
         civil_status: "",
         is_pwd: "",
         is_aVoter: "",
@@ -133,6 +134,7 @@ const ResidentsTable = () => {
                 birthdate: "",
                 email: "",
                 phone: "",
+                religion: "",
                 civil_status: "",
                 is_pwd: "",
                 is_aVoter: "",
@@ -165,6 +167,7 @@ const ResidentsTable = () => {
                 birthdate: "",
                 email: "",
                 phone: "",
+                religion: "",
                 civil_status: "",
                 is_pwd: "",
                 is_aVoter: "",
@@ -218,11 +221,11 @@ const ResidentsTable = () => {
         }
 
         const csvHeaders = [
-            "Full Name, Age, Purok, Gender, Birthdate, Email, Phone, Civil Status, PWD, Registered Voter, Employment Status, Income Source, Educational Level, QR Code"
+            "Full Name, Age, Purok, Gender, Birthdate, Email, Phone, Religion, Civil Status, PWD, Registered Voter, Employment Status, Income Source, Educational Level, QR Code"
         ];
 
         const csvRows = filteredResidents.map(resident =>
-            `"${resident.fullname}","${resident.age}","${resident.purok}","${resident.gender}","${resident.birthdate}","${resident.email}","${resident.phone}","${resident.civil_status}","${resident.is_pwd}","${resident.is_aVoter}","${resident.employment_status}","${resident.income_source}","${resident.educational_level}","${qrCodeBase64}"`
+            `"${resident.fullname}","${resident.age}","${resident.purok}","${resident.gender}","${resident.birthdate}","${resident.email}","${resident.phone}","${resident.religion}","${resident.civil_status}","${resident.is_pwd}","${resident.is_aVoter}","${resident.employment_status}","${resident.income_source}","${resident.educational_level}","${qrCodeBase64}"`
         );
 
         const csvContent = [csvHeaders, ...csvRows].join("\n");
@@ -293,7 +296,7 @@ const ResidentsTable = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.success("QR Code downloaded successfully!");
+        toast.success("QR Code is ready to be downloaded!");
     };
 
     return (
@@ -340,6 +343,7 @@ const ResidentsTable = () => {
         <option value="birthdate">Birthdate</option>
         <option value="email">Email</option>
         <option value="phone">Phone Number</option>
+        <option value="religion">Religion</option>
         <option value="is_pwd">PWD</option>
         <option value="is_aVoter">Registered Voter</option>
         <option value="employment_status">Employment Status</option>
@@ -388,6 +392,7 @@ const ResidentsTable = () => {
                         birthdate: "",
                         email: "",
                         phone: "",
+                        religion: "",
                         civil_status: "",
                         is_pwd: "",
                         is_aVoter: "",
@@ -588,6 +593,9 @@ const ResidentsTable = () => {
                                 <strong>Phone:</strong> <span className='text-gray-200'>{selectedResident.phone}</span>
                             </p>
                             <p className='text-gray-400'>
+                                <strong>Religion:</strong> <span className='text-gray-200'>{selectedResident.religion}</span>
+                            </p>
+                            <p className='text-gray-400'>
                                 <strong>Civil Status:</strong> <span className='text-gray-200'>{selectedResident.civil_status}</span>
                             </p>
                             <p className='text-gray-400'>
@@ -606,15 +614,18 @@ const ResidentsTable = () => {
                                 <strong>Educational Level:</strong> <span className='text-gray-200'>{selectedResident.educational_level}</span>
                             </p>
                         </div>
-                        <div className='mt-4'>
+                        <div className='mt-4 text-center'>
                             <h3 className='text-lg font-semibold text-gray-100'>QR Code</h3>
-                            <img src={selectedResident.qrCode} alt="QR Code" className='mt-2' />
-                            <button
-                                className='bg-blue-500 text-white px-4 py-2 rounded-lg mt-4'
-                                onClick={() => handleDownloadQR(selectedResident.qrCode, selectedResident.fullname)}
-                            >
-                                <Download size={18} className='mr-2' /> Download QR Code
-                            </button>
+                            <img src={selectedResident.qrCode} alt="QR Code" className='mt-2 mx-auto' />
+                            <div className='flex justify-center'>
+                                <button
+                                    className='bg-blue-500 text-white px-4 py-2 rounded-lg mt-4 w-50 flex items-center justify-center'
+                                    onClick={() => handleDownloadQR(selectedResident.qrCode, selectedResident.fullname)}
+                                >
+                                    <Download size={18} className='mr-2' /> 
+                                    <span> Download QR Code </span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

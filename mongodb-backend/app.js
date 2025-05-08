@@ -77,7 +77,8 @@ const UserSchema = new mongoose.Schema({
     password: String,
     accountType: String,
     status: { type: String, default: 'Active' },
-    profilePhoto: { type: String, default: 'uploads/default-profile.png' }
+    profilePhoto: { type: String, default: 'uploads/default-profile.png' },
+    linkedId: { type: Number, required: true }// This will store the residentId or officialId
 });
 
 const ResidentSchema = new mongoose.Schema({
@@ -89,6 +90,7 @@ const ResidentSchema = new mongoose.Schema({
     birthdate: String,
     email: String,
     phone: String,
+    religion: String,
     civil_status: String,
     is_pwd: String,
     is_aVoter: String,
@@ -103,6 +105,7 @@ const OfficialSchema = new mongoose.Schema({
     fullname: String,
     position: String,
     phone: String,
+    email: String,
     profilePhoto: { type: String, default: 'uploads/default-profile.png' },
     qrCode: String
 });
@@ -214,6 +217,44 @@ app.post('/user', async (req, res) => {
     }
 
     try {
+        let linkedId = null;
+
+        if (accountType === 'Resident') {
+            // Check if the user exists in the Resident collection
+            const resident = await Resident.findOne({ fullname: name });
+            if (!resident) {
+                return res.status(400).json({ message: 'No matching resident found for the provided name.' });
+            }
+
+            // If the email does not match, update it
+            if (resident.email !== email) {
+                resident.email = email;
+                await resident.save();
+            }
+
+            linkedId = resident._id; // Save the residentId
+            console.log('Resident linkedId: ', linkedId); // Debugging log
+        } else if (accountType === 'Staff') {
+            // Check if the user exists in the Official collection
+            const official = await Official.findOne({ fullname: name });
+            if (!official) {
+                return res.status(400).json({ message: 'No matching staff found for the provided name.' });
+            }
+
+            // If the email does not match, update it
+            if (official.email !== email) {
+                official.email = email;
+                await official.save();
+            }
+
+            linkedId = official._id; // Save the officialId
+            console.log('Official linkedId: ', linkedId); // Debugging log
+        }
+
+        if (!linkedId) {
+            return res.status(400).json({message: 'Failed to link the user to a resident or staff'})
+        }
+
         const userId = await getNextSequence('userId'); // Get the next userId
         const hashedPassword = await bcrypt.hash(password, 5);
 
@@ -224,7 +265,8 @@ app.post('/user', async (req, res) => {
             password: hashedPassword,
             accountType,
             status: 'Active',
-            profilePhoto: 'uploads/default-profile.png'
+            profilePhoto: 'uploads/default-profile.png',
+            linkedId  // Save the residentId or officialId
         });
 
         await user.save();
@@ -313,7 +355,8 @@ app.get('/user/:userId', async (req, res) => {
             email: user.email,
             accountType: user.accountType,
             status: user.status,
-            profilePhoto: user.profilePhoto
+            profilePhoto: user.profilePhoto,
+            linkedId: user.linkedId 
         };
 
         res.json(userResponse);
@@ -382,9 +425,9 @@ app.delete('/user/:userId', async (req, res) => {
 
 // CRUD Operations for Residents
 app.post('/resident', async (req, res) => {
-    const { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_aVoter, employment_status, income_source, educational_level } = req.body;
+    const { fullname, age, purok, gender, birthdate, email, phone, religion, civil_status, is_pwd, is_aVoter, employment_status, income_source, educational_level } = req.body;
 
-    if (!fullname || !age || !purok || !gender || !birthdate || !email || !phone || !civil_status || is_pwd === undefined || is_aVoter === undefined || !employment_status || !income_source || !educational_level) {
+    if (!fullname || !age || !purok || !gender || !birthdate || !email || !phone || !religion || !civil_status || is_pwd === undefined || is_aVoter === undefined || !employment_status || !income_source || !educational_level) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -402,6 +445,7 @@ app.post('/resident', async (req, res) => {
             birthdate,
             email,
             phone,
+            religion,
             civil_status,
             is_pwd,
             is_aVoter,
@@ -447,7 +491,7 @@ app.get('/resident', async (req, res) => {
 // Update resident
 app.put('/resident/:residentId', async (req, res) => {
     const residentId = req.params.residentId;
-    const { fullname, age, purok, gender, birthdate, email, phone, civil_status, is_pwd, is_aVoter, employment_status, income_source, educational_level } = req.body;
+    const { fullname, age, purok, gender, birthdate, email, phone, religion, civil_status, is_pwd, is_aVoter, employment_status, income_source, educational_level } = req.body;
 
     try {
         const existingResident = await Resident.findById(residentId);
@@ -464,6 +508,7 @@ app.put('/resident/:residentId', async (req, res) => {
         if (birthdate) updateData.birthdate = birthdate;
         if (email) updateData.email = email;
         if (phone) updateData.phone = phone;
+        if (religion) updateData.religion = religion;
         if (civil_status) updateData.civil_status = civil_status;
         if (is_pwd !== undefined) updateData.is_pwd = is_pwd;
         if (is_aVoter !== undefined) updateData.is_aVoter = is_aVoter;
@@ -495,10 +540,10 @@ app.delete('/resident/:residentId', async (req, res) => {
 
 // CRUD Operations for Officials
 app.post('/official', async (req, res) => {
-    const { fullname, position, phone, profilePhoto } = req.body;
+    const { fullname, position, phone, email, profilePhoto } = req.body;
 
-    if (!fullname || !position || !phone) {
-        return res.status(400).json({ message: 'Full name, position, and phone are required' });
+    if (!fullname || !position || !phone || !email) {
+        return res.status(400).json({ message: 'Full name, position, phone and email are required' });
     }
 
     try {
@@ -511,6 +556,7 @@ app.post('/official', async (req, res) => {
             fullname,
             position,
             phone,
+            email,
             profilePhoto: profilePhoto && profilePhoto.trim() !== "" ? profilePhoto : 'uploads/default-profile.png',
             qrCode
         });
@@ -571,7 +617,7 @@ app.get('/official/:officialId', async (req, res) => {
 // Update official
 app.put('/official/:officialId', upload.single('profilePhoto'), async (req, res) => {
     const officialId = req.params.officialId;
-    let { fullname, position, phone } = req.body;
+    let { fullname, position, phone, email } = req.body;
     let profilePhoto = req.file ? req.file.path : undefined;
 
     try {
@@ -585,6 +631,7 @@ app.put('/official/:officialId', upload.single('profilePhoto'), async (req, res)
         if (fullname) updateData.fullname = String(fullname);
         if (position) updateData.position = String(position);
         if (phone) updateData.phone = String(phone);
+        if (email) updateData.email = String(email);
         if (profilePhoto) updateData.profilePhoto = profilePhoto;
 
         await Official.findByIdAndUpdate(officialId, updateData);
@@ -923,8 +970,12 @@ const saveResidentAttendanceDetails = async (resident, eventId) => {
             time: formattedTime,
         });
 
+        // Check if the time difference is less than or equal to 5 seconds
         if (existingAttendance) {
-            throw new Error('Attendance already recorded for this resident and event at the same time');
+            const timeDifference = Math.abs(new Date(existingAttendance.time) - formattedTime) / 1000; // Difference in seconds
+            if (timeDifference <= 5) {
+                throw new Error('Attendance already recorded for this resident and event within 5 seconds');
+            }
         }
 
         // Create the attendance record
@@ -996,9 +1047,16 @@ app.get('/residents_attendance/:_id', async (req, res) => {
 
 // Delete event
 app.delete('/residents_attendance/:_id', async (req, res) => {
+    const { _id } = req.params;
+
+    // Validate the _id format
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+        return res.status(400).json({ message: 'Invalid attendance record ID' });
+    }
+
     try {
-        const ResidentAttendance = await ResidentAttendance.findByIdAndDelete(req.params._id);
-        if (!ResidentAttendance) {
+        const attendanceRecord = await ResidentAttendance.findByIdAndDelete(_id);
+        if (!attendanceRecord) {
             return res.status(404).json({ message: 'Attendance record not found' });
         }
         res.status(200).json({ message: 'Attendance record deleted successfully' });
@@ -1043,8 +1101,12 @@ const saveOfficialAttendanceDetails = async (official, eventId) => {
             time: formattedTime,
         });
 
+        // Check if the time difference is less than or equal to 5 seconds
         if (existingAttendance) {
-            throw new Error('Attendance already recorded for this official and event at the same time');
+            const timeDifference = Math.abs(new Date(existingAttendance.time) - formattedTime) / 1000; // Difference in seconds
+            if (timeDifference <= 5) {
+                throw new Error('Attendance already recorded for this resident and event within 5 seconds');
+            }
         }
 
         // Create the attendance record

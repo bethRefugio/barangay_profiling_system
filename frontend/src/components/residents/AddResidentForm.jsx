@@ -112,6 +112,38 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                         required
                     />
                 </div>
+                <div
+                    className={`flex flex-col ${
+                        newResident.religion === 'Others' ? 'mb-4' : ''
+                    }`}
+                >
+                    <label className='text-sm mb-1'>Religion</label>
+                    <select
+                        name='religion'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                        value={newResident.religion}
+                        onChange={handleInputChange}
+                        required
+                    >
+                        <option value='' disabled>Select Religion</option>
+                        <option value='Roman Catholic'>Roman Catholic</option>
+                        <option value='Islam'>Islam</option>
+                        <option value='Iglesia ni Cristo'>Iglesia ni Cristo</option>
+                        <option value='Seventh Day Adventist'>Seventh Day Adventist</option>
+                        <option value='Others'>Others</option>
+                    </select>
+                    {newResident.religion === 'Others' && (
+                        <input
+                            type='text'
+                            name='religion'
+                            placeholder='Please specify your religion'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                            value={newResident.religionInput || ''}
+                            onChange={(e) => handleInputChange({ target: { name: 'religion', value: e.target.value } })}
+                            required
+                        />
+                    )}
+                </div>
                 <div className='flex flex-col'>
                     <label className='text-sm mb-1'>Civil Status</label>
                     <select
@@ -210,8 +242,8 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                             name='other_employment_status'
                             placeholder='Please specify'
                             className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
-                            value={otherEmploymentStatus}
-                            onChange={(e) => setOtherEmploymentStatus(e.target.value)}
+                            value={newResident.other_employment_status || ''}
+                            onChange={(e) => handleInputChange({ target: { name: 'other_employment_status', value: e.target.value } })}
                         />
                     )}
                 </div>
@@ -243,8 +275,8 @@ const AddResidentForm = ({ newResident, handleInputChange, handleAddResident, se
                             name='other_income_source'
                             placeholder='Please specify'
                             className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
-                            value={otherIncomeSource}
-                            onChange={(e) => setOtherIncomeSource(e.target.value)}
+                            value={newResident.other_income_source || ''}
+                            onChange={(e) => handleInputChange({ target: { name: 'other_income_source', value: e.target.value } })}
                         />
                     )}
                 </div>

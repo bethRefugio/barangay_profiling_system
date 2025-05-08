@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { PhoneIncoming, Edit, Trash2, UserPlus, Search, Download } from "lucide-react";
+import { PhoneIncoming, Edit, Mail, Trash2, UserPlus, Search, Download } from "lucide-react";
 import axios from "axios";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -20,7 +20,8 @@ const OfficialsList = () => {
     const [newOfficial, setNewOfficial] = useState({
         fullname: "",
         position: "",
-        phone: ""
+        phone: "",
+        email: ""
     });
     const [accountType, setAccountType] = useState(null);
     
@@ -78,6 +79,7 @@ const OfficialsList = () => {
             formData.append('fullname', newOfficial.fullname);
             formData.append('position', newOfficial.position);
             formData.append('phone', newOfficial.phone);
+            formData.append('email', newOfficial.email);
     
             // Check if a new profile photo was selected
             if (newOfficial.profilePhoto instanceof File) {
@@ -100,6 +102,7 @@ const OfficialsList = () => {
                 fullname: "",
                 position: "",
                 phone: "",
+                email:"",
                 profilePhoto: null
             });
     
@@ -155,6 +158,7 @@ const OfficialsList = () => {
                 fullname: "",
                 position: "",
                 phone: "",
+                email:"",
                 profilePhoto: null,
             });
         } catch (error) {
@@ -260,9 +264,21 @@ const OfficialsList = () => {
                         <input
                             type='text'
                             name='phone'
-                            placeholder='e.g., 09123456789'
+                            placeholder='e.g., 0912-345-6789'
                             className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
                             value={newOfficial.phone}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div>
+                    <div className='flex flex-col'>
+                        <label className='text-sm mb-1'>Email</label>
+                        <input
+                            type='email'
+                            name='email'
+                            placeholder='e.g., juan.delacruz@gmail.com'
+                            className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80'
+                            value={newOfficial.email}
                             onChange={handleInputChange}
                             required
                         />
@@ -342,9 +358,21 @@ const OfficialsList = () => {
                             <input
                                 type='text'
                                 name='phone'
-                                placeholder='e.g., 09123456789'
+                                placeholder='e.g., 0912-345-6789'
                                 className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
                                 value={newOfficial.phone}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                        <div className='flex flex-col'>
+                            <label className='text-sm mb-1'>Email</label>
+                            <input
+                                type='email'
+                                name='email'
+                                placeholder='e.g., juan.delacruz@gmail.com'
+                                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-4 pr-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64'
+                                value={newOfficial.email}
                                 onChange={handleInputChange}
                                 required
                             />
@@ -407,7 +435,14 @@ const OfficialsList = () => {
                         <div className="text-center">
                             <h3 className="text-sm font-medium text-gray-400">{item.position}</h3>
                             <p className="mt-1 text-xl font-semibold text-gray-100">{item.fullname}</p>
-                            <p className="mt-1 text-sm text-gray-400">{item.phone}</p>
+                            <div className="mt-1 flex items-center text-sm text-gray-400 text-center">
+                                <PhoneIncoming className="mr-2 text-gray-500" size={16} />
+                                <span>{item.phone}</span>
+                            </div>
+                            <div className="mt-1 flex items-center text-sm text-gray-400">
+                                <Mail className="mr-2 text-gray-500" size={16} />
+                                <span>{item.email}</span>
+                            </div>    
                         </div>
 
                         {(accountType === "staff" || accountType === "admin" || accountType === "barangay captain") && (
