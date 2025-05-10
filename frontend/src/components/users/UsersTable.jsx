@@ -17,6 +17,7 @@ const UsersTable = () => {
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [newUser, setNewUser] = useState({
         name: "",
         email: "",
@@ -168,6 +169,22 @@ const UsersTable = () => {
             toast.success("CSV file downloaded successfully!");
         };
     
+    const downloadJSON = () => {
+        if (filteredUsers.length === 0) {
+            toast.warn("No data available to download.");
+            return;
+        }
+
+        const jsonContent = JSON.stringify(filteredUsers, null, 2);
+        const blob = new Blob([jsonContent], { type: "application/json"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "users_list.json";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("JSON file downloaded successfully");
+    }
 
     return (
         <motion.div
@@ -214,12 +231,47 @@ const UsersTable = () => {
                 <button
                     className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
                         focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
-                    onClick={downloadCSV}
+                    onClick={() => setShowDownloadModal(true)}
                 >
                     <Download size={18} className='mr-2' /> Download
                 </button>
             </div>
 
+             {/* Download Modal */}
+             {showDownloadModal && (
+                    <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+                        <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-96'>
+                            <h3 className='text-lg font-semibold text-gray-100 mb-4'>Download Options</h3>
+                            <p className='text-gray-400 mb-6'>Choose the format to download the users' data:</p>
+                            <div className='flex justify-between'>
+                                <button
+                                    className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                    onClick={() => {
+                                        downloadCSV();
+                                        setShowDownloadModal(false);
+                                    }}
+                                >
+                                    Download as CSV
+                                </button>
+                                <button
+                                    className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                    onClick={() => {
+                                        downloadJSON();
+                                        setShowDownloadModal(false);
+                                    }}
+                                >
+                                    Download as JSON
+                                </button>
+                            </div>
+                            <button
+                                className='mt-4 w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
+                                onClick={() => setShowDownloadModal(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
             
 
             {showAddForm && (

@@ -120,18 +120,27 @@ const Profile = () => {
     return (
         <SettingSection icon={User} title={"Profile"}>
             <ToastContainer />
-            <div className='flex flex-col sm:flex-row items-center mb-6'>
-                <img
-                    src={`http://localhost:5000/${profilePhoto}`}
-                    alt='Profile'
-                    className='rounded-full w-20 h-20 object-cover mr-4'
-                />
+            <div className='flex flex-col sm:flex-row items-center justify-between mb-6'>
+                <div className='flex flex-col sm:flex-row items-center'>
+                    <img
+                        src={`http://localhost:5000/${profilePhoto}`}
+                        alt='Profile'
+                        className='rounded-full w-20 h-20 object-cover mr-4'
+                    />
 
-                <div>
-                    <h3 className='text-lg font-semibold text-gray-100'>{user.name}</h3>
-                    <p className='text-gray-400'>{user.email}</p>
-                    <p className='text-gray-400'>{user.accountType}</p>
+                    <div>
+                        <h3 className='text-lg font-semibold text-gray-100'>{user.name}</h3>
+                        <p className='text-gray-400'>{user.email}</p>
+                        <p className='text-gray-400'>{user.accountType}</p>
+                    </div>
                 </div>
+
+                <button
+                    className='bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-200 mt-4 sm:mt-0'
+                    onClick={() => setEditMode(true)}
+                >
+                    Edit Profile
+                </button>
             </div>
 
             {editMode ? (
@@ -209,12 +218,7 @@ const Profile = () => {
                 </form>
             ) : (
                 <div className='flex flex-col items-center justify-start'>
-                    <button
-                        className='bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-200 w-full sm:w-auto'
-                        onClick={() => setEditMode(true)}
-                    >
-                        Edit Profile
-                    </button>
+                    
                    
 
                     {qrCode && (

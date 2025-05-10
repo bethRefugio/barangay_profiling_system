@@ -8,6 +8,7 @@ import EditResidentForm from './EditResidentForm';
 import DeleteResidentConfirmation from './DeleteResidentConfirmation';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { json } from 'react-router-dom';
 
 const API_URL = 'http://localhost:5000/resident';
 
@@ -23,6 +24,7 @@ const ResidentsTable = () => {
     const [selectedResidentId, setSelectedResidentId] = useState(null);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [residentToDelete, setResidentToDelete] = useState(null);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [newResident, setNewResident] = useState({
         fullname: "",
         age: "",
@@ -239,6 +241,23 @@ const ResidentsTable = () => {
         toast.success("CSV file downloaded successfully!");
     };
 
+    const downloadJSON = () => {
+        if (filteredResidents.length === 0) {
+            toast.warn("No data available to download.");
+            return;
+        }
+
+        const jsonContent = JSON.stringify(filteredResidents, null, 2);
+        const blob = new Blob([jsonContent], { type: "application/json"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "resident_list.json";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("JSON file downloaded successfully");
+    };
+
     const handleCsvUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -308,347 +327,383 @@ const ResidentsTable = () => {
         >
             <ToastContainer />
             <div className='relative flex flex-col items-center mb-6'>
-    {/* Title and Download Button */}
-    <div className='flex justify-between items-center w-full'>
-        <h2 className='text-xl font-semibold text-gray-100'>Resident List</h2>
-        {(accountType === "admin" || accountType === "barangay captain") && (
-            
-        <button
-            className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
-                focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
-            onClick={downloadCSV}
-        >
-            <Download size={18} className='mr-2' /> Download
-        </button>
-        )}
-    </div>
+                {/* Title and Download Button */}
+                <div className='flex justify-between items-center w-full'>
+                    <h2 className='text-xl font-semibold text-gray-100'>Resident List</h2>
+                    {(accountType === "admin" || accountType === "barangay captain") && (
+                        
+                    <button
+                        className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
+                            focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center'
+                        onClick={() => setShowDownloadModal(true)}
+                    >
+                        <Download size={18} className='mr-2' /> Download
+                    </button>
+                    )}
+                </div>
 
-    {/* Controls Section */}
-    <div className='flex flex-wrap justify-center items-center space-x-4 mt-4'>
-        {/* Dropdown for Column Selection */}
-<div className='relative'>
-    <select
-        className='bg-gray-700 text-white rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none'
-        value={searchColumn}
-        onChange={handleColumnChange}
-    >
-        <option value="" disabled>
-            Sort By
-        </option>
-        <option value="fullname">Full Name</option>
-        <option value="age">Age</option>
-        <option value="purok">Purok</option>
-        <option value="gender">Gender</option>
-        <option value="civil_status">Civil Status</option>
-        <option value="birthdate">Birthdate</option>
-        <option value="email">Email</option>
-        <option value="phone">Phone Number</option>
-        <option value="religion">Religion</option>
-        <option value="is_pwd">PWD</option>
-        <option value="is_aVoter">Registered Voter</option>
-        <option value="employment_status">Employment Status</option>
-        <option value="income_source">Income Source</option>
-        <option value="educational_level">Educational Level</option>
-    </select>
-    {/* Custom Dropdown Icon */}
-    <div className='absolute inset-y-0 right-2 flex items-center pointer-events-none'>
-        <svg
-            className='w-4 h-4 text-gray-400'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
-        >
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
-        </svg>
-    </div>
-</div>
-        {/* Search Input */}
-        <div className='relative flex items-center w-[350px]'>
-            <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
-            <input
-                type='text'
-                placeholder='Search residents...'
-                className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-12 pr-6 py-2 w-full 
-                    focus:outline-none focus:ring-2 focus:ring-blue-500'
-                onChange={handleSearch}
-                value={searchTerm}
-            />
-        </div>
-
-        {/* Add Icon Button */}
-        {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
-            <button
-                className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
-                onClick={() => {
-                    setShowAddForm(true);
-                    setShowEditForm(false);
-                    setNewResident({
-                        fullname: "",
-                        age: "",
-                        purok: "",
-                        gender: "",
-                        birthdate: "",
-                        email: "",
-                        phone: "",
-                        religion: "",
-                        civil_status: "",
-                        is_pwd: "",
-                        is_aVoter: "",
-                        employment_status: "",
-                        income_source: "",
-                        educational_level: ""
-                    });
-                }}
-            >
-                <UserRoundPlus size={18} />
-            </button>
-        )}
-
-        {/* Import Data Button */}
-        {(accountType === "admin" || accountType === "barangay captain") && (
-            <div className='relative'>
-                <button
-                    className='bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
-                    onClick={() => document.getElementById('csvUploadInput').click()} // Trigger file input click
-                >
-                    <Import size={16} className='mr-2' />
-                    Import data
-                </button>
-                <input
-                    id='csvUploadInput'
-                    type='file'
-                    accept='.csv'
-                    onChange={handleCsvUpload}
-                    className='hidden' // Hide the file input
-                />
-            </div>
-        )}
-
-                    {/* Save and Cancel Buttons */}
-                    {csvResidents.length > 0 && (
-                        <div className='flex space-x-4'>
+                 {/* Download Modal */}
+                {showDownloadModal && (
+                    <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+                        <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-96'>
+                            <h3 className='text-lg font-semibold text-gray-100 mb-4'>Download Options</h3>
+                            <p className='text-gray-400 mb-6'>Choose the format to download the residents' data:</p>
+                            <div className='flex justify-between'>
+                                <button
+                                    className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                    onClick={() => {
+                                        downloadCSV();
+                                        setShowDownloadModal(false);
+                                    }}
+                                >
+                                    Download as CSV
+                                </button>
+                                <button
+                                    className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                    onClick={() => {
+                                        downloadJSON();
+                                        setShowDownloadModal(false);
+                                    }}
+                                >
+                                    Download as JSON
+                                </button>
+                            </div>
                             <button
-                                className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
-                                onClick={saveCsvToDatabase}
-                            >
-                                Save to Database
-                            </button>
-                            <button
-                                className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
-                                onClick={cancelCsvUpload}
+                                className='mt-4 w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
+                                onClick={() => setShowDownloadModal(false)}
                             >
                                 Cancel
                             </button>
                         </div>
-                    )}
-                </div>
-            </div>
+                    </div>
+                )}
 
-
-            {showAddForm && (
-                <AddResidentForm
-                    newResident={newResident}
-                    handleInputChange={handleInputChange}
-                    handleAddResident={handleAddResident}
-                    setShowForm={setShowAddForm}
-                />
-            )}
-
-            {showEditForm && (
-                <EditResidentForm
-                    newResident={newResident}
-                    handleInputChange={handleInputChange}
-                    handleEditResident={handleEditResident}
-                    setShowForm={setShowEditForm}
-                />
-            )}
-
-            {showDeleteConfirmation && (
-                <DeleteResidentConfirmation
-                    handleDeleteResident={handleDeleteResident}
-                    setShowDeleteConfirmation={setShowDeleteConfirmation}
-                />
-            )}
-
-
-           <div className='overflow-x-auto'>
-                <table className='min-w-full divide-y divide-gray-700'>
-                    <thead>
-                        <tr>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Full Name
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Age
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Purok
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Gender
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Civil Status
-                            </th>
-                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident" || accountType === "guest") && (
-                                <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                    Actions
-                                </th>
-                            )}
-                        </tr>
-                    </thead>
-
-                    <tbody className='divide-y divide-gray-700'>
-                        {currentResidents.map((resident) => (
-                            <motion.tr
-                                key={resident.id}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.3 }}
+                {/* Controls Section */}
+                <div className='flex flex-wrap justify-center items-center space-x-4 mt-4'>
+                    {/* Dropdown for Column Selection */}
+                    <div className='relative'>
+                        <select
+                            className='bg-gray-700 text-white rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none'
+                            value={searchColumn}
+                            onChange={handleColumnChange}
+                        >
+                            <option value="" disabled>
+                                Sort By
+                            </option>
+                            <option value="fullname">Full Name</option>
+                            <option value="age">Age</option>
+                            <option value="purok">Purok</option>
+                            <option value="gender">Gender</option>
+                            <option value="civil_status">Civil Status</option>
+                            <option value="birthdate">Birthdate</option>
+                            <option value="email">Email</option>
+                            <option value="phone">Phone Number</option>
+                            <option value="religion">Religion</option>
+                            <option value="is_pwd">PWD</option>
+                            <option value="is_aVoter">Registered Voter</option>
+                            <option value="employment_status">Employment Status</option>
+                            <option value="income_source">Income Source</option>
+                            <option value="educational_level">Educational Level</option>
+                        </select>
+                        {/* Custom Dropdown Icon */}
+                        <div className='absolute inset-y-0 right-2 flex items-center pointer-events-none'>
+                            <svg
+                                className='w-4 h-4 text-gray-400'
+                                xmlns='http://www.w3.org/2000/svg'
+                                fill='none'
+                                viewBox='0 0 24 24'
+                                stroke='currentColor'
                             >
-                                <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100'>
-                                    {resident.fullname}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.age}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.purok}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.gender}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {resident.civil_status}
-                                </td>
-                                {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident" || accountType === "guest") && (
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                        <button
-                                            className='text-blue-400 hover:text-blue-300 mr-2'
-                                            onClick={() => handleViewDetails(resident)}
-                                        >
-                                            <ListCollapse size={18} />
-                                        </button>
-                                        {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (
-                                        <button
-                                            className='text-indigo-400 hover:text-indigo-300 mr-2'
-                                            onClick={() => handleEditClick(resident)}
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        )}
-                                        {(accountType === "admin" || accountType === "barangay captain") && (
-                                            <button
-                                                className='text-red-400 hover:text-red-300 mr-2'
-                                                onClick={() => handleDeleteClick(resident)}
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        )}
-                                    </td>
-                                )}
-                            </motion.tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Pop-out Form for Resident Details */}
-            {showDetails && selectedResident && (
-                <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
-                <div className='absolute inset-0 backdrop-blur-sm'></div>
-                    <div className='relative bg-gray-800 p-6 rounded-lg shadow-lg w-3/4 z-50'>
-                        <div className='flex justify-between items-center mb-6'>
-                            <h2 className='text-xl font-semibold text-gray-100'>Resident Details</h2>
-                            <button
-                                className='text-gray-400 hover:text-gray-300'
-                                onClick={handleCloseDetails}
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <div className='grid grid-cols-2 gap-4'>
-                            <p className='text-gray-400'>
-                                <strong>Full Name:</strong> <span className='text-gray-200'>{selectedResident.fullname}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Age:</strong> <span className='text-gray-200'>{selectedResident.age}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Purok:</strong> <span className='text-gray-200'>{selectedResident.purok}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Gender:</strong> <span className='text-gray-200'>{selectedResident.gender}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Birthdate:</strong> <span className='text-gray-200'>{selectedResident.birthdate}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Email:</strong> <span className='text-gray-200'>{selectedResident.email}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Phone:</strong> <span className='text-gray-200'>{selectedResident.phone}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Religion:</strong> <span className='text-gray-200'>{selectedResident.religion}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Civil Status:</strong> <span className='text-gray-200'>{selectedResident.civil_status}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>PWD:</strong> <span className='text-gray-200'>{selectedResident.is_pwd}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Registered Voter:</strong> <span className='text-gray-200'>{selectedResident.is_aVoter}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Employment Status:</strong> <span className='text-gray-200'>{selectedResident.employment_status}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Income Source:</strong> <span className='text-gray-200'>{selectedResident.income_source}</span>
-                            </p>
-                            <p className='text-gray-400'>
-                                <strong>Educational Level:</strong> <span className='text-gray-200'>{selectedResident.educational_level}</span>
-                            </p>
-                        </div>
-                        <div className='mt-4 text-center'>
-                            <h3 className='text-lg font-semibold text-gray-100'>QR Code</h3>
-                            <img src={selectedResident.qrCode} alt="QR Code" className='mt-2 mx-auto' />
-                            <div className='flex justify-center'>
-                                <button
-                                    className='bg-blue-500 text-white px-4 py-2 rounded-lg mt-4 w-50 flex items-center justify-center'
-                                    onClick={() => handleDownloadQR(selectedResident.qrCode, selectedResident.fullname)}
-                                >
-                                    <Download size={18} className='mr-2' /> 
-                                    <span> Download QR Code </span>
-                                </button>
-                            </div>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                            </svg>
                         </div>
                     </div>
-                </div>
-            )}
-            <div className='flex justify-between items-center mb-4 mt-6'>
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600'
-                    >
-                        Previous
-                    </button>
-                    <span>Page {currentPage}</span>
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredResidents.length / residentsPerPage)))}
-                        disabled={currentPage === Math.ceil(filteredResidents.length / residentsPerPage)}
-                        className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600'
-                    >
-                        Next
-                    </button>
-                </div>
-        </motion.div>
-    );
+                            {/* Search Input */}
+                            <div className='relative flex items-center w-[350px]'>
+                                <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
+                                <input
+                                    type='text'
+                                    placeholder='Search residents...'
+                                    className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-12 pr-6 py-2 w-full 
+                                        focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                    onChange={handleSearch}
+                                    value={searchTerm}
+                                />
+                            </div>
+
+                            {/* Add Icon Button */}
+                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident") && (
+                                <button
+                                    className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
+                                        focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
+                                    onClick={() => {
+                                        setShowAddForm(true);
+                                        setShowEditForm(false);
+                                        setNewResident({
+                                            fullname: "",
+                                            age: "",
+                                            purok: "",
+                                            gender: "",
+                                            birthdate: "",
+                                            email: "",
+                                            phone: "",
+                                            religion: "",
+                                            civil_status: "",
+                                            is_pwd: "",
+                                            is_aVoter: "",
+                                            employment_status: "",
+                                            income_source: "",
+                                            educational_level: ""
+                                        });
+                                    }}
+                                >
+                                    <UserRoundPlus size={18} />
+                                </button>
+                            )}
+
+                            {/* Import Data Button */}
+                            {(accountType === "admin" || accountType === "barangay captain") && (
+                                <div className='relative'>
+                                    <button
+                                        className='bg-blue-500 text-white px-4 py-2 w-40 rounded-lg hover:bg-blue-600 
+                                            focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center'
+                                        onClick={() => document.getElementById('csvUploadInput').click()} // Trigger file input click
+                                    >
+                                        <Import size={16} className='mr-2' />
+                                        Import data
+                                    </button>
+                                    <input
+                                        id='csvUploadInput'
+                                        type='file'
+                                        accept='.csv'
+                                        onChange={handleCsvUpload}
+                                        className='hidden' // Hide the file input
+                                    />
+                                </div>
+                            )}
+
+                                        {/* Save and Cancel Buttons */}
+                                        {csvResidents.length > 0 && (
+                                            <div className='flex space-x-4'>
+                                                <button
+                                                    className='bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                                    onClick={saveCsvToDatabase}
+                                                >
+                                                    Save to Database
+                                                </button>
+                                                <button
+                                                    className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500'
+                                                    onClick={cancelCsvUpload}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+
+                                {showAddForm && (
+                                    <AddResidentForm
+                                        newResident={newResident}
+                                        handleInputChange={handleInputChange}
+                                        handleAddResident={handleAddResident}
+                                        setShowForm={setShowAddForm}
+                                    />
+                                )}
+
+                                {showEditForm && (
+                                    <EditResidentForm
+                                        newResident={newResident}
+                                        handleInputChange={handleInputChange}
+                                        handleEditResident={handleEditResident}
+                                        setShowForm={setShowEditForm}
+                                    />
+                                )}
+
+                                {showDeleteConfirmation && (
+                                    <DeleteResidentConfirmation
+                                        handleDeleteResident={handleDeleteResident}
+                                        setShowDeleteConfirmation={setShowDeleteConfirmation}
+                                    />
+                                )}
+
+
+                            <div className='overflow-x-auto'>
+                                    <table className='min-w-full divide-y divide-gray-700'>
+                                        <thead>
+                                            <tr>
+                                                <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                                    Full Name
+                                                </th>
+                                                <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                                    Age
+                                                </th>
+                                                <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                                    Purok
+                                                </th>
+                                                <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                                    Gender
+                                                </th>
+                                                <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                                    Civil Status
+                                                </th>
+                                                {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident" || accountType === "guest") && (
+                                                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                                        Actions
+                                                    </th>
+                                                )}
+                                            </tr>
+                                        </thead>
+
+                                        <tbody className='divide-y divide-gray-700'>
+                                            {currentResidents.map((resident) => (
+                                                <motion.tr
+                                                    key={resident.id}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{ duration: 0.3 }}
+                                                >
+                                                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100'>
+                                                        {resident.fullname}
+                                                    </td>
+                                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                                        {resident.age}
+                                                    </td>
+                                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                                        {resident.purok}
+                                                    </td>
+                                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                                        {resident.gender}
+                                                    </td>
+                                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                                        {resident.civil_status}
+                                                    </td>
+                                                    {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff" || accountType === "resident" || accountType === "guest") && (
+                                                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                                            <button
+                                                                className='text-blue-400 hover:text-blue-300 mr-2'
+                                                                onClick={() => handleViewDetails(resident)}
+                                                            >
+                                                                <ListCollapse size={18} />
+                                                            </button>
+                                                            {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (
+                                                            <button
+                                                                className='text-indigo-400 hover:text-indigo-300 mr-2'
+                                                                onClick={() => handleEditClick(resident)}
+                                                            >
+                                                                <Edit size={18} />
+                                                            </button>
+                                                            )}
+                                                            {(accountType === "admin" || accountType === "barangay captain") && (
+                                                                <button
+                                                                    className='text-red-400 hover:text-red-300 mr-2'
+                                                                    onClick={() => handleDeleteClick(resident)}
+                                                                >
+                                                                    <Trash2 size={18} />
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                </motion.tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Pop-out Form for Resident Details */}
+                                {showDetails && selectedResident && (
+                                    <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
+                                    <div className='absolute inset-0 backdrop-blur-sm'></div>
+                                        <div className='relative bg-gray-800 p-6 rounded-lg shadow-lg w-3/4 z-50'>
+                                            <div className='flex justify-between items-center mb-6'>
+                                                <h2 className='text-xl font-semibold text-gray-100'>Resident Details</h2>
+                                                <button
+                                                    className='text-gray-400 hover:text-gray-300'
+                                                    onClick={handleCloseDetails}
+                                                >
+                                                    <X size={24} />
+                                                </button>
+                                            </div>
+                                            <div className='grid grid-cols-2 gap-4'>
+                                                <p className='text-gray-400'>
+                                                    <strong>Full Name:</strong> <span className='text-gray-200'>{selectedResident.fullname}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Age:</strong> <span className='text-gray-200'>{selectedResident.age}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Purok:</strong> <span className='text-gray-200'>{selectedResident.purok}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Gender:</strong> <span className='text-gray-200'>{selectedResident.gender}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Birthdate:</strong> <span className='text-gray-200'>{selectedResident.birthdate}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Email:</strong> <span className='text-gray-200'>{selectedResident.email}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Phone:</strong> <span className='text-gray-200'>{selectedResident.phone}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Religion:</strong> <span className='text-gray-200'>{selectedResident.religion}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Civil Status:</strong> <span className='text-gray-200'>{selectedResident.civil_status}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>PWD:</strong> <span className='text-gray-200'>{selectedResident.is_pwd}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Registered Voter:</strong> <span className='text-gray-200'>{selectedResident.is_aVoter}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Employment Status:</strong> <span className='text-gray-200'>{selectedResident.employment_status}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Income Source:</strong> <span className='text-gray-200'>{selectedResident.income_source}</span>
+                                                </p>
+                                                <p className='text-gray-400'>
+                                                    <strong>Educational Level:</strong> <span className='text-gray-200'>{selectedResident.educational_level}</span>
+                                                </p>
+                                            </div>
+                                            <div className='mt-4 text-center'>
+                                                <h3 className='text-lg font-semibold text-gray-100'>QR Code</h3>
+                                                <img src={selectedResident.qrCode} alt="QR Code" className='mt-2 mx-auto' />
+                                                <div className='flex justify-center'>
+                                                    <button
+                                                        className='bg-blue-500 text-white px-4 py-2 rounded-lg mt-4 w-50 flex items-center justify-center'
+                                                        onClick={() => handleDownloadQR(selectedResident.qrCode, selectedResident.fullname)}
+                                                    >
+                                                        <Download size={18} className='mr-2' /> 
+                                                        <span> Download QR Code </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className='flex justify-between items-center mb-4 mt-6'>
+                                        <button
+                                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                            disabled={currentPage === 1}
+                                            className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600'
+                                        >
+                                            Previous
+                                        </button>
+                                        <span>Page {currentPage}</span>
+                                        <button
+                                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredResidents.length / residentsPerPage)))}
+                                            disabled={currentPage === Math.ceil(filteredResidents.length / residentsPerPage)}
+                                            className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600'
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                            </motion.div>
+                        );
 };
 
 export default ResidentsTable;

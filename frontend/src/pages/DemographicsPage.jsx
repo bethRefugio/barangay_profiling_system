@@ -12,6 +12,7 @@ import CivilStatusDistribution from "../components/statistics/CivilStatusDistrib
 import EducationalLevelDistribution from "../components/residents/EducationLevelDistribution";
 import RegisteredVoterDistribution from "../components/statistics/RegisteredVoterDistribution";
 import PwdStatusDistribution from "../components/statistics/PwdStatusDistribution";
+import ReligionDistribution from "../components/statistics/ReligionDistribution";
 
 const DemographicsPage = () => {
 	const [residents, setResidents] = useState([]);
@@ -70,6 +71,10 @@ const DemographicsPage = () => {
 					
 				</div>
 				
+				<div className='mb-8'>
+				<ReligionDistribution/>
+				</div>
+
 			</main>
 		</div>
 	);
