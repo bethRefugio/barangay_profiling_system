@@ -221,22 +221,24 @@ const Profile = () => {
                     
                    
 
-                    {qrCode && (
-                        <div className='mt-6 text-center'>
-                            <h3 className='text-lg font-semibold text-gray-100'>Your QR Code</h3>
-                            <img
-                                src={qrCode}
-                                alt='QR Code'
-                                className='w-40 h-40 object-contain mx-auto mt-4'
-                            />
-                            <button
-                                className='bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200 mt-4'
-                                onClick={handleDownloadQRCode}
-                            >
-                                Download QR Code
-                            </button>
-                        </div>
-                    )}
+                {(qrCode && qrCode.length > 0) ? (
+                    <div className='mt-6 text-center'>
+                        <h3 className='text-lg font-semibold text-gray-100'>Your QR Code</h3>
+                        <img
+                            src={qrCode}
+                            alt='QR Code'
+                            className='w-40 h-40 object-contain mx-auto mt-4'
+                        />
+                        <button
+                            className='bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200 mt-4'
+                            onClick={handleDownloadQRCode}
+                        >
+                            Download QR Code
+                        </button>
+                    </div>
+                ) : (
+                    <p className='text-gray-400 mt-6'>QR Code not available.</p>
+                )}
                 </div>
             )}
         </SettingSection>
