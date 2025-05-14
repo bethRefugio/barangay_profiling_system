@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, Scro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 import axios from 'axios';
 
 const SettingsPage = ({ navigation, onLogout }) => {
@@ -14,57 +15,45 @@ const SettingsPage = ({ navigation, onLogout }) => {
   const [qrCode, setQRCode] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-    useEffect(() => {
-      const fetchUser = async () => {
-        try {
-          const userIdStr = await AsyncStorage.getItem('userId');
-          console.log('Fetched userId from AsyncStorage:', userIdStr);
-          if (!userIdStr) {
-            throw new Error('User ID not found');
-          }
-          const userId = Number(userIdStr);
-          if (isNaN(userId)) {
-            throw new Error('User ID is not a valid number');
-          }
-          const response = await axios.get(`http://192.168.1.10:5000/user/${userId}`);
-          setUser(response.data);
-          setUpdatedUser({ name: response.data.name, email: response.data.email, password: '' });
-          setProfilePhoto(response.data.profilePhoto || 'http://192.168.1.10:5000/uploads/default-profile.png');
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userIdStr = await AsyncStorage.getItem('userId');
+        if (!userIdStr) throw new Error('User ID not found');
 
-          // Fetch QR code based on account type
-          if (response.data.accountType === 'Resident') {
-            try {
-              const residentResponse = await axios.get(`http://192.168.1.10:5000/resident/${String(response.data.linkedId)}`);
-              console.log('Resident QR code:', residentResponse.data.qrCode);
-              setQRCode(residentResponse.data.qrCode);
-            } catch (error) {
-              console.warn('Resident QR code not found:', error);
-              setQRCode(null);
-            }
-          } else if (response.data.accountType === 'Staff') {
-            try {
-              const officialResponse = await axios.get(`http://192.168.1.10:5000/official/${String(response.data.linkedId)}`);
-              console.log('Official QR code:', officialResponse.data.qrCode);
-              setQRCode(officialResponse.data.qrCode);
-            } catch (error) {
-              console.warn('Official QR code not found:', error);
-              setQRCode(null);
-            }
+        const userId = Number(userIdStr);
+        if (isNaN(userId)) throw new Error('User ID is not a valid number');
+
+        const response = await axios.get(`http://192.168.1.10:5000/user/${userId}`);
+        setUser(response.data);
+        setUpdatedUser({ name: response.data.name, email: response.data.email, password: '' });
+        setProfilePhoto(response.data.profilePhoto);
+
+        if (response.data.accountType === 'Resident') {
+          try {
+            const residentResponse = await axios.get(`http://192.168.1.10:5000/resident/${String(response.data.linkedId)}`);
+            setQRCode(residentResponse.data.qrCode);
+          } catch {
+            setQRCode(null);
           }
-        } catch (error) {
-          console.error('Error fetching user:', error);
-          if (error.response && error.response.status === 404) {
-            Alert.alert('Error', 'User not found. Please log in again.');
-          } else {
-            Alert.alert('Error', 'Failed to fetch user data.');
+        } else if (response.data.accountType === 'Staff') {
+          try {
+            const officialResponse = await axios.get(`http://192.168.1.10:5000/official/${String(response.data.linkedId)}`);
+            setQRCode(officialResponse.data.qrCode);
+          } catch {
+            setQRCode(null);
           }
-        } finally {
-          setLoading(false);
         }
-      };
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        Alert.alert('Error', 'Failed to fetch user data.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchUser();
-    }, []);
+    fetchUser();
+  }, []);
 
   const handleInputChange = (key, value) => {
     setUpdatedUser({ ...updatedUser, [key]: value });
@@ -73,26 +62,24 @@ const SettingsPage = ({ navigation, onLogout }) => {
   const pickImage = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (permissionResult.granted === false) {
+      if (!permissionResult.granted) {
         Alert.alert('Permission Denied', 'Permission to access media library is required!');
         return;
       }
+
       const pickerResult = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,
       });
+
       if (!pickerResult.cancelled) {
         const localUri = pickerResult.uri;
         const filename = localUri.split('/').pop();
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : `image`;
-        setProfilePhoto({
-          uri: localUri,
-          name: filename,
-          type,
-        });
+        setProfilePhoto({ uri: localUri, name: filename, type });
       }
     } catch (error) {
       console.error('Error picking image:', error);
@@ -155,10 +142,32 @@ const SettingsPage = ({ navigation, onLogout }) => {
   const handleDownloadQRCode = async () => {
     if (!qrCode) return;
     try {
-      // Download QR code image to device's document directory
-      const fileUri = FileSystem.documentDirectory + 'qrcode.png';
-      const downloadResult = await FileSystem.downloadAsync(qrCode, fileUri);
-      Alert.alert('Download Complete', `QR code saved to: ${downloadResult.uri}`);
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Permission to access media library is required.');
+        return;
+      }
+
+      const fileName = user?.name?.replace(/\s+/g, '_') + '-qrcode.png' || 'qrcode.png';
+      let fileUri = FileSystem.documentDirectory + fileName;
+
+      if (qrCode.startsWith('data:image')) {
+        const base64Data = qrCode.split(',')[1];
+        await FileSystem.writeAsStringAsync(fileUri, base64Data, { encoding: FileSystem.EncodingType.Base64 });
+      } else {
+        const downloadResult = await FileSystem.downloadAsync(qrCode, fileUri);
+        fileUri = downloadResult.uri;
+      }
+
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      const album = await MediaLibrary.getAlbumAsync('Download');
+      if (!album) {
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+
+      Alert.alert('Download Complete', `QR code saved as ${fileName} in your Downloads folder.`);
     } catch (error) {
       console.error('Error downloading QR code:', error);
       Alert.alert('Error', 'Failed to download QR code.');
@@ -175,10 +184,9 @@ const SettingsPage = ({ navigation, onLogout }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <Text style={styles.title}>Settings</Text>
 
-      {/* Profile Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Profile</Text>
         {editMode ? (
@@ -213,13 +221,8 @@ const SettingsPage = ({ navigation, onLogout }) => {
                 onChangeText={(value) => handleInputChange('password', value)}
                 secureTextEntry={!showPassword}
               />
-              <TouchableOpacity
-                onPress={togglePasswordVisibility}
-                style={styles.passwordToggle}
-              >
-                <Text style={{ color: '#6366F1', fontWeight: 'bold' }}>
-                  {showPassword ? 'Hide' : 'Show'}
-                </Text>
+              <TouchableOpacity onPress={togglePasswordVisibility} style={styles.passwordToggle}>
+                <Text style={{ color: '#6366F1', fontWeight: 'bold' }}>{showPassword ? 'Hide' : 'Show'}</Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
@@ -250,7 +253,6 @@ const SettingsPage = ({ navigation, onLogout }) => {
         )}
       </View>
 
-      {/* Danger Zone Section */}
       <View style={[styles.section, styles.dangerZone]}>
         <Text style={styles.sectionTitle}>Danger Zone</Text>
         <Text style={styles.text}>Delete your account permanently.</Text>
@@ -259,7 +261,6 @@ const SettingsPage = ({ navigation, onLogout }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Logout Button */}
       <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
         <Text style={styles.buttonText}>Log Out</Text>
       </TouchableOpacity>

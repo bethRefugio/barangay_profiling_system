@@ -55,12 +55,16 @@ const ProjectsPage = () => {
       <Text style={styles.title}>Barangay Projects</Text>
       {projects.map((project, index) => (
         <View key={index} style={styles.projectCard}>
-          <Image source={project.image} style={styles.projectImage} />
           <View style={styles.projectDetails}>
             <Text style={styles.projectTitle}>{project.title}</Text>
-            {project.description.map((item, idx) => (
-              <Text key={idx} style={styles.projectDescription}>• {item}</Text>
-            ))}
+            <View style={styles.imageAndDetails}>
+              <Image source={project.image} style={styles.projectImage} />
+              <View style={styles.descriptionContainer}>
+                {project.description.map((item, idx) => (
+                  <Text key={idx} style={styles.projectDescription}>• {item}</Text>
+                ))}
+              </View>
+            </View>
           </View>
         </View>
       ))}
@@ -70,12 +74,14 @@ const ProjectsPage = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#121212' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 16, textAlign: 'center' },
-  projectCard: { flexDirection: 'row', marginBottom: 20, backgroundColor: 'rgba(55, 65, 81, 0.8)', borderRadius: 10, padding: 10 },
-  projectImage: { width: 100, height: 100, borderRadius: 10, marginRight: 10 },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 20, textAlign: 'center' },
+  projectCard: { flexDirection: 'row', marginBottom: 20, backgroundColor: 'rgba(55, 65, 81, 0.8)', borderRadius: 10, padding: 10, alignItems: 'center' },
+  projectImage: { width: 300, height: 150, borderRadius: 10, marginLeft: 10 },
   projectDetails: { flex: 1 },
-  projectTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
-  projectDescription: { color: '#ccc', fontSize: 14, marginBottom: 4 },
+  projectTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 8 , alignItems: 'center'},
+  imageAndDetails: { flexDirection: 'column', alignItems: 'center' },
+  descriptionContainer: { marginTop: 8 , alignItems: 'center' },
+  projectDescription: { color: '#ccc', fontSize: 14, marginBottom: 4, alignItems: 'center' },
 });
 
 export default ProjectsPage;

@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, ActivityIndicator, Image } from 'react-native';
+import { View, ActivityIndicator, Image, Text, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import LoginPage from './src/pages/LoginPage';
@@ -18,11 +18,25 @@ import SettingsPage from './src/pages/SettingsPage';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+function Header() {
+  return (
+    <View style={styles.headerContainer}>
+      <Image
+        source={require('./assets/logo_enhanced.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+      <Text style={styles.headerText}>Brgy. Bunawan</Text>
+    </View>
+  );
+}
+
 function ResidentTabs({ onLogout }) {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false,
+        headerShown: true,
+        header: () => <Header />,
         tabBarIcon: ({ color, size }) => {
           let iconName;
 
@@ -47,7 +61,7 @@ function ResidentTabs({ onLogout }) {
       })}
     >
       <Tab.Screen name="Overview" component={OverviewPage} />
-      <Tab.Screen name="Request" component={RequestPage} />
+      {/*<Tab.Screen name="Request" component={RequestPage} />*/}
       <Tab.Screen name="Officials" component={OfficialsPage} />
       <Tab.Screen name="Announcements" component={AnnouncementsPage} />
       <Tab.Screen name="Projects" component={ProjectsPage} />
@@ -104,7 +118,7 @@ export default function App() {
             <Stack.Screen name="Login" options={{ headerShown: false }}>
               {(props) => <LoginPage {...props} onLogin={() => setIsLoggedIn(true)} />}
             </Stack.Screen>
-            <Stack.Screen name="Signup" component={SignupPage} options={{ headerShown: false }} />
+            <Stack.Screen name="Signup" component={SignupPage} options={{ headerShown: true }} />
           </>
         ) : (
           <>
@@ -120,3 +134,27 @@ export default function App() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 10,
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 12,
+  },
+  headerText: {
+    color: 'gray',
+    fontSize: 20,
+    fontWeight: 'bold',
+    paddingTop: 5,
+    paddingBottom: 5,
+  },
+});

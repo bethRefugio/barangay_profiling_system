@@ -488,6 +488,17 @@ app.get('/resident', async (req, res) => {
     }
 });
 
+// Fetch all residents with only _id and fullname for testing
+app.get('/resident/all', async (req, res) => {
+    try {
+        const residents = await Resident.find({}, { _id: 1, fullname: 1 });
+        res.json(residents);
+    } catch (error) {
+        console.error('Error fetching residents list:', error);
+        res.status(500).json({ message: 'Failed to fetch residents list' });
+    }
+});
+
 // Update resident
 app.put('/resident/:residentId', async (req, res) => {
     const residentId = req.params.residentId;

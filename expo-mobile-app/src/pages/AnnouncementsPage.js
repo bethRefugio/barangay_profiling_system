@@ -36,6 +36,15 @@ const AnnouncementsPage = () => {
         <View key={index} style={styles.announcementCard}>
           <Text style={styles.announcementTitle}>{announcement.title}</Text>
           <Text style={styles.announcementContent}>{announcement.content}</Text>
+          <Text style={styles.announcementMeta}>
+            Date: {announcement.date || 'N/A'}
+          </Text>
+          <Text style={styles.announcementMeta}>
+            Time: {announcement.time || 'N/A'}
+          </Text>
+          <Text style={styles.announcementMeta}>
+            Place: {announcement.place || 'N/A'}
+          </Text>
         </View>
       ))}
     </ScrollView>
@@ -48,8 +57,9 @@ const styles = StyleSheet.create({
   addButton: { backgroundColor: '#6366F1', padding: 12, borderRadius: 8, marginBottom: 16, alignItems: 'center' },
   addButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   announcementCard: { backgroundColor: 'rgba(55, 65, 81, 0.8)', borderRadius: 8, padding: 12, marginBottom: 12 },
-  announcementTitle: { color: '#fff', fontWeight: 'bold', fontSize: 18, marginBottom: 6 },
-  announcementContent: { color: '#ccc', fontSize: 14 },
+  announcementTitle: { color: '#fff', fontWeight: 'bold', fontSize: 20, marginBottom: 6 },
+  announcementContent: { color: '#ccc', fontSize: 16 },
+  announcementMeta: { color: '#aaa', fontSize: 14, marginTop: 4 },
 });
 
 export default AnnouncementsPage;
