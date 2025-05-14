@@ -11,6 +11,7 @@ const ResidentAttendanceTable = () => {
     const [residents, setResidents] = useState([]);
     const [filteredResidents, setFilteredResidents] = useState([]);
     const [eventName, setEventName] = useState("");
+    const [eventStatus, setEventStatus] = useState(""); // New state for event status
     const [searchTerm, setSearchTerm] = useState("");
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [recordToDelete, setRecordToDelete] = useState(null);
@@ -21,6 +22,7 @@ const ResidentAttendanceTable = () => {
                 const response = await fetch(`http://localhost:5000/events/${eventId}`);
                 const data = await response.json();
                 setEventName(data.name); // Assuming the API returns an object with a `name` property
+                setEventStatus(data.status || ""); // Set event status
             } catch (error) {
                 console.error("Error fetching event details:", error);
             }
@@ -34,14 +36,17 @@ const ResidentAttendanceTable = () => {
     useEffect(() => {
         const fetchResidentsAttendance = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/residents_attendance`);
+                // Fetch attendance filtered by eventId if supported by backend API
+                const response = await fetch(`http://localhost:5000/residents_attendance?eventId=${eventId}`);
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
                 }
                 const data = await response.json();
                 if (Array.isArray(data)) {
-                    setResidents(data);
-                    setFilteredResidents(data); // Initialize filtered residents
+                    // Filter client-side as fallback if backend does not filter
+                    const filteredData = data.filter(record => record.eventId === eventId);
+                    setResidents(filteredData);
+                    setFilteredResidents(filteredData); // Initialize filtered residents
                 } else {
                     console.error("Invalid data format:", data);
                     setResidents([]);
@@ -149,10 +154,13 @@ const ResidentAttendanceTable = () => {
                     />
                 </div>
                     <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`bg-blue-500 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            eventStatus === "Done" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+                        }`}
                         onClick={() =>
                             navigate("/events/attendance/record_resident", { state: { eventId } })
                         }
+                        disabled={eventStatus === "Done"}
                     >
                         Record Attendance
                     </button>

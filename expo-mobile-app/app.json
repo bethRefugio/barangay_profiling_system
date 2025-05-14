@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Brgy. Bunawan",
+    "slug": "your-app-slug",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo_enhanced.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/logo_enhanced.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.yourappname"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo_enhanced.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.yourcompany.yourappname"
+    },
+    "web": {
+      "favicon": "./assets/logo_enhanced.png"
+    }
+  }
+}

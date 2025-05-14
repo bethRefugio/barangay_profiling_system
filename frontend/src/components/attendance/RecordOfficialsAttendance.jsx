@@ -78,7 +78,7 @@ function RecordOfficialsAttendance() {
                 return;
             }
             console.error('QR Reader Error:', error);
-           }
+        }
     };
 
     return (
@@ -105,6 +105,7 @@ function RecordOfficialsAttendance() {
                         constraints={{ facingMode: 'environment' }} // Use back camera
                         videoContainerStyle={{ width: '100%', height: '100%' }} // Ensure proper video sizing
                         style={{ width: '100%', height: '100%' }} // Fit within the container
+                        scanDelay={scanning ? 10000 : 500} // Delay scanning while saving
                     />
                 </div>
             </center>

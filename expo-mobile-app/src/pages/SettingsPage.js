@@ -15,6 +15,16 @@ const SettingsPage = ({ navigation, onLogout }) => {
   const [qrCode, setQRCode] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Helper to get full URI for profile photo
+  const getProfilePhotoUri = (photo) => {
+    if (!photo) return null;
+    if (photo.startsWith('http') || photo.startsWith('https')) {
+      return photo;
+    }
+    // Assuming backend serves images from this base URL, adjust as needed
+    return `http://192.168.1.10:5000/${photo}`;
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -68,15 +78,15 @@ const SettingsPage = ({ navigation, onLogout }) => {
       }
 
       const pickerResult = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ImagePicker.MediaType ? ImagePicker.MediaType.Images : ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,
       });
 
-      if (!pickerResult.cancelled) {
+      if (!pickerResult.cancelled && pickerResult.uri) {
         const localUri = pickerResult.uri;
-        const filename = localUri.split('/').pop();
+        const filename = localUri ? localUri.split('/').pop() : 'photo.jpg';
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : `image`;
         setProfilePhoto({ uri: localUri, name: filename, type });
@@ -96,11 +106,11 @@ const SettingsPage = ({ navigation, onLogout }) => {
       if (updatedUser.password) {
         formData.append('password', updatedUser.password);
       }
-      if (profilePhoto && typeof profilePhoto !== 'string') {
+      if (profilePhoto && typeof profilePhoto === 'object' && profilePhoto.uri) {
         formData.append('profilePhoto', {
           uri: profilePhoto.uri,
-          name: profilePhoto.name,
-          type: profilePhoto.type,
+          name: profilePhoto.name || 'profile.jpg',
+          type: profilePhoto.type || 'image/jpeg',
         });
       }
 
@@ -196,7 +206,7 @@ const SettingsPage = ({ navigation, onLogout }) => {
                 <Image source={{ uri: profilePhoto.uri || profilePhoto }} style={styles.profilePhoto} />
               ) : (
                 <View style={[styles.profilePhoto, styles.profilePhotoPlaceholder]}>
-                  <Text style={{ color: '#888' }}>Select Photo</Text>
+                  <Text style={{ color: 'white' }}>Select Photo</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -234,7 +244,7 @@ const SettingsPage = ({ navigation, onLogout }) => {
           </>
         ) : (
           <>
-            <Image source={{ uri: profilePhoto }} style={styles.profilePhoto} />
+            <Image source={{ uri: getProfilePhotoUri(profilePhoto) }} style={styles.profilePhoto} />
             <Text style={styles.text}>Name: {user.name}</Text>
             <Text style={styles.text}>Email: {user.email}</Text>
             <TouchableOpacity style={styles.button} onPress={() => setEditMode(true)}>

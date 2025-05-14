@@ -963,30 +963,20 @@ const fetchResidentDetails = async (residentId) => {
 
 const saveResidentAttendanceDetails = async (resident, eventId) => {
     try {
-        // Format the current time to exclude milliseconds
         const currentTime = new Date();
-        const formattedTime = new Date(
-            currentTime.getFullYear(),
-            currentTime.getMonth(),
-            currentTime.getDate(),
-            currentTime.getHours(),
-            currentTime.getMinutes(),
-            currentTime.getSeconds()
-        );
 
-        // Check if an attendance record already exists with the same residentId, eventId, and time
+        // Calculate the time 5 seconds ago from currentTime
+        const fiveSecondsAgo = new Date(currentTime.getTime() - 5000);
+
+        // Check if an attendance record already exists with the same residentId, eventId, and time within last 5 seconds
         const existingAttendance = await ResidentAttendance.findOne({
             residentId: resident._id,
             eventId: eventId,
-            time: formattedTime,
+            time: { $gte: fiveSecondsAgo }
         });
 
-        // Check if the time difference is less than or equal to 5 seconds
         if (existingAttendance) {
-            const timeDifference = Math.abs(new Date(existingAttendance.time) - formattedTime) / 1000; // Difference in seconds
-            if (timeDifference <= 5) {
-                throw new Error('Attendance already recorded for this resident and event within 5 seconds');
-            }
+            console.log('Attendance already recorded for this resident and event within 5 seconds');
         }
 
         // Create the attendance record
@@ -997,7 +987,7 @@ const saveResidentAttendanceDetails = async (resident, eventId) => {
             gender: resident.gender,
             purok: resident.purok,
             eventId: eventId,
-            time: formattedTime, // Use formatted time
+            time: currentTime, // Use current time with milliseconds
         };
 
         await ResidentAttendance.create(attendance);

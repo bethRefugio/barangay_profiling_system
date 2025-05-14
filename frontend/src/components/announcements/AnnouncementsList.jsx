@@ -6,6 +6,17 @@ const AnnouncementsList = ({ announcements, onUpdate, onEdit, accountType }) => 
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [selectedAnnouncementId, setSelectedAnnouncementId] = useState(null);
 
+    // Helper function to convert 24-hour time string to 12-hour format with AM/PM
+    const formatTime12Hour = (time24) => {
+        if (!time24) return "";
+        const [hourStr, minute] = time24.split(":");
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12;
+        if (hour === 0) hour = 12;
+        return `${hour}:${minute} ${ampm}`;
+    };
+
     const handleDelete = async () => {
         try {
             await fetch(`http://localhost:5000/announcements/${selectedAnnouncementId}`, { method: 'DELETE' });
@@ -38,7 +49,7 @@ const AnnouncementsList = ({ announcements, onUpdate, onEdit, accountType }) => 
                             <h2 className="text-xl font-semibold text-gray-100 mb-2">{announcement.title}</h2>
                             <p className="text-gray-300 mb-2">{announcement.content}</p>
                             {announcement.date && <p className="text-gray-400 mb-1">Date: {announcement.date}</p>}
-                            {announcement.time && <p className="text-gray-400 mb-1">Time: {announcement.time}</p>}
+                            {announcement.time && <p className="text-gray-400 mb-1">Time: {formatTime12Hour(announcement.time)}</p>}
                             {announcement.place && <p className="text-gray-400 mb-1">Place: {announcement.place}</p>}
                         </div>
                         {(accountType === "admin" || accountType === "barangay captain" || accountType === "staff") && (

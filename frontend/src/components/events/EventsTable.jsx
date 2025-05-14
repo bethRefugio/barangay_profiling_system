@@ -26,6 +26,17 @@ const EventsTable = () => {
         status: "Upcoming"
     });
 
+    // Helper function to convert 24-hour time string to 12-hour format with AM/PM
+    const formatTime12Hour = (time24) => {
+        if (!time24) return "";
+        const [hourStr, minute] = time24.split(":");
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12;
+        if (hour === 0) hour = 12;
+        return `${hour}:${minute} ${ampm}`;
+    };
+
     const fetchEvents = useCallback(async () => {
         try {
             const response = await axios.get(API_URL);
@@ -401,7 +412,7 @@ const EventsTable = () => {
                                     {event.date}
                                 </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {event.time}
+                                    {formatTime12Hour(event.time)}
                                 </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     {event.location}

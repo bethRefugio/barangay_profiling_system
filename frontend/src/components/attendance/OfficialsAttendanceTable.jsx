@@ -10,26 +10,28 @@ const OfficialsAttendanceTable = () => {
     const { eventId } = location.state || {};
     const [officials, setOfficials] = useState([]);
     const [eventName, setEventName] = useState("");
+    const [eventStatus, setEventStatus] = useState(""); // New state for event status
     const [filteredOfficials, setFilteredOfficials] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [recordToDelete, setRecordToDelete] = useState(null);
 
-        useEffect(() => {
-            const fetchEventDetails = async () => {
-                try {
-                    const response = await fetch(`http://localhost:5000/events/${eventId}`);
-                    const data = await response.json();
-                    setEventName(data.name); // Assuming the API returns an object with a `name` property
-                } catch (error) {
-                    console.error("Error fetching event details:", error);
-                }
-            };
-    
-            if (eventId) {
-                fetchEventDetails();
+    useEffect(() => {
+        const fetchEventDetails = async () => {
+            try {
+                const response = await fetch(`http://localhost:5000/events/${eventId}`);
+                const data = await response.json();
+                setEventName(data.name); // Assuming the API returns an object with a `name` property
+                setEventStatus(data.status || ""); // Set event status
+            } catch (error) {
+                console.error("Error fetching event details:", error);
             }
-        }, [eventId]);
+        };
+
+        if (eventId) {
+            fetchEventDetails();
+        }
+    }, [eventId]);
 
     useEffect(() => {
         const fetchOfficialsAttendance = async () => {
@@ -40,8 +42,10 @@ const OfficialsAttendanceTable = () => {
                 }
                 const data = await response.json();
                 if(Array.isArray(data)) {
-                    setOfficials(data);
-                    setFilteredOfficials(data); // Initialize filtered officials with all officials
+                    // Filter attendance records by eventId
+                    const filteredByEvent = data.filter(record => record.eventId === eventId);
+                    setOfficials(filteredByEvent);
+                    setFilteredOfficials(filteredByEvent); // Initialize filtered officials with filtered data
                 } else {
                     console.error("Unexpected data format:", data);
                     setOfficials([]); 
@@ -50,7 +54,8 @@ const OfficialsAttendanceTable = () => {
             } catch (error) {
                 console.error("Error fetching officials' attendance:", error);
                 setOfficials([]);
-                setFilteredOfficials([]);            }
+                setFilteredOfficials([]);            
+            }
         };
 
         if (eventId) {
@@ -91,34 +96,35 @@ const OfficialsAttendanceTable = () => {
         setFilteredOfficials(filtered);
     };
 
-    
-    
-        const handleDeleteClick = (attendanceId) => {
-            setRecordToDelete(attendanceId);
-            setShowDeleteConfirmation(true);
-        };
-    
-        const confirmDelete = async () => {
-            try {
-                console.log("Deleting attendance record with ID:", recordToDelete); // Debugging log
-                const response = await fetch(`http://localhost:5000/officials_attendance/${recordToDelete}`, {
-                    method: "DELETE",
-                });
-                if (!response.ok) {
-                    throw new Error("Failed to delete attendance record");
-                }
-                toast.success("Attendance record deleted successfully!");
-                setOfficials((prevOfficials) =>
-                    prevOfficials.filter((official) => official._id !== recordToDelete)
-                );
-            } catch (error) {
-                console.error("Error deleting attendance record:", error);
-                toast.error("Failed to delete attendance record.");
-            } finally {
-                setShowDeleteConfirmation(false);
-                setRecordToDelete(null);
+    const handleDeleteClick = (attendanceId) => {
+        setRecordToDelete(attendanceId);
+        setShowDeleteConfirmation(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            console.log("Deleting attendance record with ID:", recordToDelete); // Debugging log
+            const response = await fetch(`http://localhost:5000/officials_attendance/${recordToDelete}`, {
+                method: "DELETE",
+            });
+            if (!response.ok) {
+                throw new Error("Failed to delete attendance record");
             }
-        };
+            toast.success("Attendance record deleted successfully!");
+            setOfficials((prevOfficials) =>
+                prevOfficials.filter((official) => official._id !== recordToDelete)
+            );
+            setFilteredOfficials((prevFiltered) =>
+                prevFiltered.filter((official) => official._id !== recordToDelete)
+            );
+        } catch (error) {
+            console.error("Error deleting attendance record:", error);
+            toast.error("Failed to delete attendance record.");
+        } finally {
+            setShowDeleteConfirmation(false);
+            setRecordToDelete(null);
+        }
+    };
 
     return (
         <div className="p-6 bg-gray-800 text-white relative">
@@ -142,10 +148,13 @@ const OfficialsAttendanceTable = () => {
                     />
                 </div>
                     <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`bg-blue-500 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            eventStatus === "Done" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+                        }`}
                         onClick={() =>
                             navigate("/events/attendance/record_official", { state: { eventId } })
                         }
+                        disabled={eventStatus === "Done"}
                     >
                         Record Attendance
                     </button>
